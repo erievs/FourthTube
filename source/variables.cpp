@@ -33,7 +33,7 @@ double var_dpad_scroll_speed1_threashold = DPAD_SCROLL_THREASHOLD_DEFAULT;
 int var_free_ram = 0;
 int var_free_linear_ram = 0;
 int var_lcd_brightness = 100;
-int var_time_to_turn_off_lcd = 150;
+int var_time_to_turn_off_lcd = 1000000000;
 int var_num_of_app_start = 0;
 int var_system_region = 0;
 bool var_is_new3ds;
