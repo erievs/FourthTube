@@ -78,26 +78,11 @@ namespace youtube_parser {
 	HttpRequest http_post_json_request(const std::string &url, const std::string &json, std::map<std::string, std::string> headers) {
 		confirm_thread_network_session_list_inited();
 
-	headers["Accept-Language"] = "en";
-    headers["Content-Type"] = "application/json";
-    headers["User-Agent"] = "com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)";
-    headers["X-YouTube-Client-Name"] = "IOS";
-    headers["X-YouTube-Client-Version"] = "19.29.1";
-
-		std::string headersLog = "POST Request Headers:\n";
-		for (const auto &header : headers) {
-			headersLog += header.first + ": " + header.second + "\n";
-		}
-
-		logger.info("curl", headersLog);
-
-		logger.error("net/dl", "failed to acquire x-head-seqnum");
-		return HttpRequest::POST(url, headers, json);
-
-		logger.info("http_post_json_request url", url);
-		logger.info("http_post_json_request json", json);
+	if (!headers.count("Accept-Language")) headers["Accept-Language"] = language_code + ";q=0.9";
+	headers["Content-Type"] = "application/json";
+	return HttpRequest::POST(url, headers, json);
 	}
-
+	
 	std::pair<bool, std::string> http_post_json(const std::string &url, const std::string &json, std::map<std::string, std::string> headers) {
 		debug_info("accessing(POST)...");
 		auto result = thread_network_session_list.perform(http_post_json_request(url, json, headers));
