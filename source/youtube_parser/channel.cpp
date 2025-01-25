@@ -29,8 +29,8 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 		res.icon_url = get_thumbnail_url_closest(model["image"]["decoratedAvatarViewModel"]["avatar"]["avatarViewModel"]["image"]["sources"], 88);
 		auto tmp = model["metadata"]["contentMetadataViewModel"]["metadataRows"].array_items();
 		if (tmp.size()) {
-			tmp = tmp[0]["metadataParts"].array_items();
-			if (tmp.size() >= 2) res.subscriber_count_str = tmp[1]["text"]["content"].string_value();
+			tmp = tmp[1]["metadataParts"].array_items();
+			if (tmp.size() >= 1) res.subscriber_count_str = tmp[0]["text"]["content"].string_value();
 		}
 	}
 	res.id = metadata_renderer["externalId"].string_value();
