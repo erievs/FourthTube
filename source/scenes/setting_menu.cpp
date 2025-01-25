@@ -30,6 +30,7 @@ namespace Settings {
 	TabView *main_tab_view;
 	
 	ProgressBarView *update_progress_bar_view;
+	TextView *release_notes_view;
 	
 	int CONTENT_Y_HIGH = 240;
 	constexpr int TOP_HEIGHT = MIDDLE_FONT_INTERVAL + SMALL_MARGIN * 2;
@@ -172,6 +173,35 @@ static void update_worker_thread_func(void *) {
 						auto new_version_seq = version_str_to_vector(result_json["tag_name"].string_value());
 						auto cur_version_seq = version_str_to_vector(DEF_CURRENT_APP_VER);
 						bool update_available = cur_version_seq < new_version_seq;
+						std::string release_notes = result_json["body"].string_value();
+						std::istringstream lines(release_notes);
+						std::ostringstream wrapped;
+						std::string line;
+						size_t line_len = 0;
+						const size_t line_length = 45;
+
+						while (std::getline(lines, line)) {
+  						    std::istringstream words(line);
+ 						    std::string word;
+ 						    size_t line_len = 0;
+
+						    while (words >> word) {
+  						        if (line_len + word.length() > line_length) {
+  						            wrapped << "\n";
+ 						            line_len = 0;
+  						        }
+  						        wrapped << word << " ";
+  						        line_len += word.length() + 1;
+ 						    }
+   						wrapped << "\n";
+						}
+
+						release_notes = wrapped.str();
+
+						resource_lock.lock();
+						release_notes_view->set_text(release_notes)->set_is_visible(true);
+						resource_lock.unlock();
+
 						if (update_available) update_state = UpdateState::UPDATES_AVAILABLE, next_version_str = result_json["tag_name"].string_value();
 						else update_state = UpdateState::UP_TO_DATE;
 						check_success = true;
@@ -215,6 +245,8 @@ void Sem_init(void) {
 	popup_view->set_is_visible(false);
 	toast_view = new TextView((320 - 150) / 2, 190, 150, DEFAULT_FONT_INTERVAL + SMALL_MARGIN);
 	toast_view->set_is_visible(false);
+	release_notes_view = new TextView(0, 15, 320, 0);
+	release_notes_view->set_is_visible(false);
 	
 	main_tab_view = (new TabView(0, 0, 320, CONTENT_Y_HIGH - TOP_HEIGHT))
 		->set_stretch_subview(true)
@@ -484,6 +516,10 @@ void Sem_init(void) {
 								return 0xFF000000 | blue << 16 | other << 8 | other;
 							}
 							return DEFAULT_BACK_COLOR;
+						}),
+					(new ScrollView(0, 0, 320, CONTENT_Y_HIGH - TOP_HEIGHT))
+					    ->set_views({
+							release_notes_view
 						})
 				}),
 			// Tab #5 : Advanced
