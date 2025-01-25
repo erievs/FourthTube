@@ -121,6 +121,10 @@ YouTubeSearchResult youtube_load_search(std::string url) {
                                 debug_warning("Skipped didYouMeanRenderer");
                                 continue;
                             }
+                            if (j.has_key("horizontalCardListRenderer")) {
+                                debug_warning("Skipped horizontalCardListRenderer");
+                                continue;
+                            }
                             if (!parse_searched_item(j, res.results)) {
                                 debug_error("Error parsing search result item");
                                 success = false; 
