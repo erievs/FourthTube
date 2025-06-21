@@ -144,15 +144,15 @@ std::vector<std::string> truncate_str(std::string input_str, int max_width, int 
 	std::vector<std::vector<u64>> words; // each word is considered not separable
 	std::vector<size_t> word_start;
 	for (int i = 0; i < n; i++) {
-		bool seperate;
+		bool separate;
 		if (!i) {
-			seperate = true;
+			separate = true;
 		} else {
 			u64 last_char = words.back().back();
 			// either last_char or next char is multibyte or whitespace
-			seperate = (last_char >> 8) || (input[i] >> 8) || (last_char == (u8)' ') || (input[i] == (u8)' ');
+			separate = (last_char >> 8) || (input[i] >> 8) || (last_char == (u8)' ') || (input[i] == (u8)' ');
 		}
-		if (seperate) {
+		if (separate) {
 			words.push_back({input[i]});
 			word_start.push_back(i);
 		} else {

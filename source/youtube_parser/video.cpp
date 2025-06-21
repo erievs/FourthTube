@@ -782,7 +782,7 @@ void YouTubeVideoDetail::load_caption(const std::string &base_lang_id, const std
 	if (translation_lang_id != "") {
 		url += "&tlang=" + translation_lang_id;
 	}
-	url += "&fmt=json3&xorb=2&xobt=3&xovt=3"; // the meanings of xorb, xobt, xovt are unknwon, and these three
+	url += "&fmt=json3&xorb=2&xobt=3&xovt=3"; // the meanings of xorb, xobt, xovt are unknown, and these three
 	                                          // parameters seem to be unnecessary
 
 	access_and_parse_json([&]() { return http_get(url); },

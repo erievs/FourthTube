@@ -1,6 +1,6 @@
 #include "headers.hpp"
 
-bool var_connect_test_succes = false;
+bool var_connect_test_success = false;
 bool var_need_refresh = true;
 bool var_allow_send_app_info = false;
 bool var_hide_pointer = false;

@@ -9,7 +9,7 @@
 struct NetworkResult {
 	std::string redirected_url;
 	bool fail =
-	    false; // whether some network error occured; receiving http error code like 404 is still counted as a 'success'
+	    false; // whether some network error occurred; receiving http error code like 404 is still counted as a 'success'
 	std::string error;
 	int status_code = -1;
 	std::string status_message;

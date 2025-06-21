@@ -96,7 +96,7 @@ class NetworkDecoderFFmpegIOData {
 
 	// type : VIDEO, AUDIO
   public:
-	bool video_audio_seperate = false;
+	bool video_audio_separate = false;
 	bool audio_only = false;
 	NetworkStream *network_stream[2] = {NULL, NULL};
 	std::pair<NetworkDecoder *, NetworkStream *> *opaque[2] = {NULL, NULL};
@@ -191,7 +191,7 @@ class NetworkDecoder {
 	bool slice_cores_enabled[4];
 
 	bool is_audio_only() { return io->audio_only; }
-	bool is_av_separate() { return io->video_audio_seperate; }
+	bool is_av_separate() { return io->video_audio_separate; }
 
 	void set_frame_cores_enabled(bool *enabled) { memcpy(frame_cores_enabled, enabled, 4); }
 	void set_slice_cores_enabled(bool *enabled) { memcpy(slice_cores_enabled, enabled, 4); }

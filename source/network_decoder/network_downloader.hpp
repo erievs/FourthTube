@@ -70,7 +70,7 @@ class NetworkStreamDownloader {
 	Mutex streams_lock;
 	std::vector<NetworkStream *> streams;
 
-	bool thread_exit_reqeusted = false;
+	bool thread_exit_requested = false;
 
   public:
 	NetworkStreamDownloader() = default;
@@ -78,7 +78,7 @@ class NetworkStreamDownloader {
 	// the pointer must be one that has been new-ed : it will be deleted once quit_request is made
 	void add_stream(NetworkStream *stream);
 
-	void request_thread_exit() { thread_exit_reqeusted = true; }
+	void request_thread_exit() { thread_exit_requested = true; }
 	void delete_all();
 
 	void downloader_thread();

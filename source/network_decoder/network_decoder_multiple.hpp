@@ -21,7 +21,7 @@ class NetworkMultipleDecoder {
 
 	void init_mvd();
 
-	bool video_audio_seperate;
+	bool video_audio_separate;
 	bool adjust_timestamp = false;
 
 	std::string video_url;

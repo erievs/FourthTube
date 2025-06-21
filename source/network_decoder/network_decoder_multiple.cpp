@@ -61,9 +61,9 @@ Result_with_string NetworkMultipleDecoder::init(std::string video_url, std::stri
 		usleep(10000);
 	}
 
-	video_audio_seperate = (video_url != audio_url);
+	video_audio_separate = (video_url != audio_url);
 	is_livestream = (fragment_len != -1);
-	if (video_audio_seperate) {
+	if (video_audio_separate) {
 		this->video_url = video_url;
 		this->audio_url = audio_url;
 	} else {
@@ -94,7 +94,7 @@ Result_with_string NetworkMultipleDecoder::init(std::string video_url, std::stri
 	int fragment_id = 0;
 	NetworkDecoderFFmpegIOData tmp_ffmpeg_data;
 	std::vector<NetworkStream *> streams;
-	if (video_audio_seperate) {
+	if (video_audio_separate) {
 		NetworkStream *video_stream =
 		    new NetworkStream(video_url + url_append, extract_stream_length(video_url), is_livestream, NULL);
 		NetworkStream *audio_stream =
@@ -312,7 +312,7 @@ void NetworkMultipleDecoder::livestream_initer_thread_func() {
 
 		NetworkDecoderFFmpegIOData tmp_ffmpeg_data;
 		std::string url_prefix = "&sq=" + std::to_string(seq_next);
-		if (video_audio_seperate) {
+		if (video_audio_separate) {
 			NetworkStream *video_stream =
 			    new NetworkStream(video_url + url_prefix, extract_stream_length(video_url), is_livestream, NULL);
 			NetworkStream *audio_stream =

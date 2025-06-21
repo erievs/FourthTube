@@ -153,7 +153,7 @@ static std::string remove_url_parameter(const std::string &url, const std::strin
 
 #define LOG_THREAD_STR "net/dl"
 void NetworkStreamDownloader::downloader_thread() {
-	while (!thread_exit_reqeusted) {
+	while (!thread_exit_requested) {
 		size_t cur_stream_index =
 		    (size_t)-1; // the index of the stream on which we will perform a download in this loop
 		streams_lock.lock();

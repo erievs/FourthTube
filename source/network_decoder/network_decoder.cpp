@@ -176,7 +176,7 @@ Result_with_string NetworkDecoderFFmpegIOData::init_(int type, NetworkDecoder *p
 		result.error_description = "avformat_find_stream_info() failed " + std::to_string(ffmpeg_result);
 		goto fail;
 	}
-	if (video_audio_seperate) {
+	if (video_audio_separate) {
 		if (format_context[type]->nb_streams != 1) {
 			result.error_description = "nb_streams != 1 : " + std::to_string(format_context[type]->nb_streams);
 			goto fail;
@@ -216,13 +216,13 @@ Result_with_string NetworkDecoderFFmpegIOData::init(NetworkStream *video_stream,
                                                     NetworkDecoder *parent_decoder) {
 	Result_with_string result;
 
-	video_audio_seperate = video_stream != audio_stream;
+	video_audio_separate = video_stream != audio_stream;
 	network_stream[VIDEO] = video_stream;
 	network_stream[AUDIO] = audio_stream;
 	this->parent_decoder = parent_decoder;
 
 	// init io
-	if (video_audio_seperate) {
+	if (video_audio_separate) {
 		RETURN_WITH_PREFIX_ON_ERROR(init_(VIDEO, parent_decoder), "[v] ");
 		RETURN_WITH_PREFIX_ON_ERROR(init_(AUDIO, parent_decoder), "[a] ");
 	} else {
@@ -254,7 +254,7 @@ Result_with_string NetworkDecoderFFmpegIOData::reinit_stream(int type, int64_t s
 
 	logger.info("debug", "avformat reinit #" + std::to_string(type) + "...");
 	deinit_(type, false);
-	RETURN_WITH_PREFIX_ON_ERROR(init_(type, parent_decoder), video_audio_seperate ? "[v+a]"
+	RETURN_WITH_PREFIX_ON_ERROR(init_(type, parent_decoder), video_audio_separate ? "[v+a]"
 	                                                         : type == VIDEO      ? "[v]"
 	                                                                              : "[a]");
 
@@ -288,7 +288,7 @@ end:
 	return result;
 }
 double NetworkDecoderFFmpegIOData::get_duration() {
-	return (double)format_context[video_audio_seperate ? AUDIO : BOTH]->duration / AV_TIME_BASE;
+	return (double)format_context[video_audio_separate ? AUDIO : BOTH]->duration / AV_TIME_BASE;
 }
 
 /* ********************************************************* */

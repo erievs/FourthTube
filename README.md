@@ -23,7 +23,7 @@ If you find one of those, it would be helpful to open an issue on this GitHub re
 
   [5GBurrito](https://github.com/5GBurrito) - Minor changes (project manager?).
 
-  [2B_enpitsu](https://github.com/2b-zipper) - New banner, watch history fix, new icon, 480p support, some other fixes, and a fair bit more (thank you so much!).
+  [2b-zipper](https://github.com/2b-zipper) - New banner, watch history fix, new icon, 480p support, some other fixes, and a fair bit more (thank you so much!).
 
   [ItsFrocat](https://github.com/ItsFrocat) & [Dragontwo14](https://github.com/Dragontwo14) - For the strings used in the German translation.
 
