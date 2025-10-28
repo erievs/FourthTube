@@ -84,11 +84,11 @@
 <APP_UP_TO_DATE>The app is up to date</APP_UP_TO_DATE>
 <UPDATES_AVAILABLE>Update available</UPDATES_AVAILABLE>
 <OVERWRITE_3DSX_CONFIRM>Note : %0 will be overwritten</OVERWRITE_3DSX_CONFIRM>
-<INSTALL_CIA_CONFIRM>The operation would install .cia</INSTALL_CIA_CONFIRM>
+<INSTALL_CIA_CONFIRM>Install update?</INSTALL_CIA_CONFIRM>
 <ACCESSING>Accessing...</ACCESSING>
 <DOWNLOADING>Downloading...</DOWNLOADING>
 <INSTALLING>Installing...</INSTALLING>
-<UPDATE_SUCCESS>Update is successfully installed</UPDATE_SUCCESS>
+<UPDATE_SUCCESS>Update successfully installed</UPDATE_SUCCESS>
 <UPDATE_FAIL>Failed to update</UPDATE_FAIL>
 <EXIT_CONFIRM>Are you sure you want to exit?</EXIT_CONFIRM>
 <NOT_A_YOUTUBE_URL>Not a YouTube URL</NOT_A_YOUTUBE_URL>
