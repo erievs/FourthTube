@@ -156,7 +156,7 @@ struct PostView : public FixedWidthView {
 			main_height += 16 + SMALL_MARGIN * 2; // upvote icon/str
 			float reply_height = 0;
 			if (replies_shown) {
-				reply_height += SMALL_MARGIN + DEFAULT_FONT_INTERVAL + SMALL_MARGIN; // fold replies
+				reply_height += SMALL_MARGIN + DEFAULT_FONT_INTERVAL + SMALL_MARGIN; // hide replies
 			}
 			for (size_t i = 0; i < replies_shown; i++) {
 				reply_height += replies[i]->get_height();
@@ -188,7 +188,7 @@ struct PostView : public FixedWidthView {
 		float cur_y = std::max(left_height(), right_height());
 		cur_y += 16 + SMALL_MARGIN * 2;
 		if (replies_shown) {
-			cur_y += SMALL_MARGIN + DEFAULT_FONT_INTERVAL + SMALL_MARGIN; // fold replies
+			cur_y += SMALL_MARGIN + DEFAULT_FONT_INTERVAL + SMALL_MARGIN; // hide replies
 		}
 		for (size_t i = 0; i < replies_shown; i++) {
 			res.push_back({cur_y, replies[i]});
