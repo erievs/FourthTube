@@ -35,7 +35,7 @@ struct PostView : public FixedWidthView {
 	std::vector<std::string> content_lines;
 	bool icon_holding = false;
 	bool show_more_holding = false;
-	bool fold_replies_holding = false;
+	bool hide_replies_holding = false;
 	bool show_more_replies_holding = false;
 
 	// timestamp functionality
@@ -119,7 +119,7 @@ struct PostView : public FixedWidthView {
 	void reset_holding_status_() override {
 		icon_holding = false;
 		show_more_holding = false;
-		fold_replies_holding = false;
+		hide_replies_holding = false;
 		show_more_replies_holding = false;
 		reset_timestamp_holding_status();
 		for (auto reply_view : replies) {
@@ -132,7 +132,7 @@ struct PostView : public FixedWidthView {
 	void on_scroll() override {
 		icon_holding = false;
 		show_more_holding = false;
-		fold_replies_holding = false;
+		hide_replies_holding = false;
 		show_more_replies_holding = false;
 		reset_timestamp_holding_status();
 		for (auto reply_view : replies) {

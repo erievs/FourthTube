@@ -83,7 +83,7 @@ void PostView::draw_() const {
 		if (replies_shown) { // hide replies
 			cur_y += SMALL_MARGIN;
 			Draw(LOCALIZED(HIDE_REPLIES), content_x_pos(), cur_y - 2, 0.5, 0.5, COLOR_LINK);
-			if (fold_replies_holding) {
+			if (hide_replies_holding) {
 				Draw_line(content_x_pos(), cur_y + DEFAULT_FONT_INTERVAL, COLOR_LINK,
 				          content_x_pos() + Draw_get_width(LOCALIZED(HIDE_REPLIES), 0.5), cur_y + DEFAULT_FONT_INTERVAL,
 				          COLOR_LINK, 1);
@@ -176,20 +176,20 @@ void PostView::update_(Hid_info key) {
 
 		if (replies_shown) {
 			cur_y += SMALL_MARGIN;
-			bool inside_fold_replies =
+			bool inside_hide_replies =
 			    in_range(key.touch_x, content_x_pos(),
 			             std::min<float>(x1, content_x_pos() + Draw_get_width(LOCALIZED(HIDE_REPLIES), 0.5))) &&
 			    in_range(key.touch_y, cur_y, cur_y + DEFAULT_FONT_INTERVAL + 1);
 
-			if (key.p_touch && inside_fold_replies) {
-				fold_replies_holding = true;
+			if (key.p_touch && inside_hide_replies) {
+				hide_replies_holding = true;
 			}
-			if (key.touch_x == -1 && fold_replies_holding) {
+			if (key.touch_x == -1 && hide_replies_holding) {
 				replies_shown = 0;
 				var_need_refresh = true;
 			}
-			if (!inside_fold_replies) {
-				fold_replies_holding = false;
+			if (!inside_hide_replies) {
+				hide_replies_holding = false;
 			}
 			cur_y += DEFAULT_FONT_INTERVAL;
 			cur_y += SMALL_MARGIN;
