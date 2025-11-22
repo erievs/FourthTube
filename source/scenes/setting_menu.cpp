@@ -782,7 +782,7 @@ void Sem_init(void) {
 						->set_popup_height(85),
 					(new TextView(0, 0, 320, DEFAULT_FONT_INTERVAL + SMALL_MARGIN))
 						->set_text([] () -> std::string {
-							static const std::string prefix = LOCALIZED(OAUTH_STATUS) + ": ";
+							const std::string prefix = LOCALIZED(OAUTH_STATUS) + ": ";
 							switch (OAuth::oauth_state) {
 								case OAuth::OAuthState::NOT_AUTHENTICATED: return prefix + LOCALIZED(OAUTH_NOT_AUTHENTICATED);
 								case OAuth::OAuthState::AUTHENTICATED: return prefix + LOCALIZED(OAUTH_AUTHENTICATED);
