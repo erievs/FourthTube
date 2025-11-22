@@ -561,7 +561,7 @@ YouTubeVideoDetail youtube_load_video_page(std::string url) {
 
 		// Fallback: If Android VR with auth returns UNPLAYABLE, retry with unauthenticated Android
 		if (use_android_vr && res.playability_status == "UNPLAYABLE") {
-			debug_info("Fallback to unauthenticated Android");
+			debug_info("Fallback to unauthenticated Android Client");
 
 			std::string fallback_content =
 			    R"({"videoId": "%0", %1"context": {"client": {"hl": "%2","gl": "%3","clientName": "ANDROID","clientVersion": "20.10.38","deviceMake": "Apple","deviceModel": "iPhone9,1","osName": "iPhone","userAgent": "com.google.ios.youtube/19.01.1 (iPhone9,1; U; CPU iOS 15_0_0 like Mac OS X;)\"","osVersion": "15.0.0.19A346", "visitorData": "%4"}}, "playbackContext": {"contentPlaybackContext": {"signatureTimestamp": "0"}}})";
