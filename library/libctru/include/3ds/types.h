@@ -14,7 +14,7 @@
 /// would be nice if newlib had this already
 #ifndef SSIZE_MAX
 #ifdef SIZE_MAX
-#define SSIZE_MAX ((SIZE_MAX) >> 1)
+#define SSIZE_MAX ((ssize_t)((SIZE_MAX) >> 1))
 #endif
 #endif
 
