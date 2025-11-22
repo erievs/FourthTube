@@ -8,6 +8,7 @@ extern bool var_night_mode;
 extern bool var_eco_mode;
 extern bool var_debug_mode;
 extern bool var_history_enabled;
+extern bool var_oauth_enabled;
 extern int var_autoplay_level;
 extern int var_loop_mode;
 extern int var_video_quality;

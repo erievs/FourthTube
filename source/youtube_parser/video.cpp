@@ -6,6 +6,10 @@
 #include <iomanip>
 #include <algorithm>
 #include <random>
+#include "../oauth/oauth.hpp"
+#include "../system/file.hpp"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/stringbuffer.h"
 
 static bool extract_player_data(Document &json_root, RJson player_response, YouTubeVideoDetail &res) {
 	res.playability_status = player_response["playabilityStatus"]["status"].string_value();
@@ -463,14 +467,20 @@ YouTubeVideoDetail youtube_load_video_page(std::string url) {
 	std::string video_content;
 	std::string visitor_data = extractVisitorData();
 
-	if (var_player_response == 0) {
+	// Use Android VR client when authenticated, regardless of var_player_response setting
+	bool use_android_vr = OAuth::is_authenticated();
+
+	if (use_android_vr) {
+		video_content =
+		    R"({"videoId": "%0", %1"context": {"client": {"hl": "%2","gl": "%3","clientName": "ANDROID_VR","clientVersion": "1.65.10","deviceMake": "Oculus","deviceModel": "Quest 3","androidSdkVersion": "34","osName": "Android","osVersion": "14","visitorData": "%4"}}, "playbackContext": {"contentPlaybackContext": {"signatureTimestamp": "0"}}, "contentCheckOk": true, "racyCheckOk": true})";
+	} else if (var_player_response == 0) {
 		// This makes no sense, I know. But InnerTube is completely okay with it, so let's use it.
 		video_content =
 		    R"({"videoId": "%0", %1"context": {"client": {"hl": "%2","gl": "%3","clientName": "ANDROID","clientVersion": "20.10.38","deviceMake": "Apple","deviceModel": "iPhone9,1","osName": "iPhone","userAgent": "com.google.ios.youtube/19.01.1 (iPhone9,1; U; CPU iOS 15_0_0 like Mac OS X;)\"","osVersion": "15.0.0.19A346", "visitorData": "%4"}}, "playbackContext": {"contentPlaybackContext": {"signatureTimestamp": "0"}}})";
 	} else if (var_player_response == 1) {
 		// For testing. By default, Android is used.
 		video_content =
-		    R"({"videoId": "%0", %1"context": {"client": {"hl": "%2","gl": "%3","clientName": "ANDROID_VR","clientVersion": "1.62.27","deviceMake": "Oculus","deviceModel": "Quest 3","androidSdkVersion": "32","osName": "Android", "userAgent": "com.google.android.apps.youtube.vr.oculus/1.62.27 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip\"","osVersion": "12L", "visitorData": "%4"}}, "playbackContext": {"contentPlaybackContext": {"signatureTimestamp": "0"}}})";
+		    R"({"videoId": "%0", %1"context": {"client": {"hl": "%2","gl": "%3","clientName": "ANDROID_VR","clientVersion": "1.65.10","deviceMake": "Oculus","deviceModel": "Quest 3","androidSdkVersion": "34","osName": "Android", "userAgent": "com.google.android.apps.youtube.vr.oculus/1.62.27 (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip\"","osVersion": "12L", "visitorData": "%4"}}, "playbackContext": {"contentPlaybackContext": {"signatureTimestamp": "0"}}})";
 	} else if (var_player_response == 2) {
 		// Unused client in InnerTube. Has some similar quirks to Android VR and iOS, but might still be useful.
 		// Yes, we identify as an iPhone in some places. This is intentional and it works. Don't ask why.
@@ -501,13 +511,20 @@ YouTubeVideoDetail youtube_load_video_page(std::string url) {
 
 	std::string urls[2] = {get_innertube_api_url("next"), get_innertube_api_url("player")};
 
+	// Add Authorization header for Android VR client when authenticated
+	std::map<std::string, std::string> player_headers;
+	if (use_android_vr) {
+		player_headers["Authorization"] = "Bearer " + OAuth::get_access_token();
+		debug_info("Using authenticated Android VR client");
+	}
+
 	debug_info("accessing(multi)...");
 	std::vector<NetworkResult> results;
 	bool success = true;
 	{
 		std::vector<HttpRequest> requests;
 		requests.push_back(http_post_json_request(urls[0], post_content));
-		requests.push_back(http_post_json_request(urls[1], video_content));
+		requests.push_back(http_post_json_request(urls[1], video_content, player_headers));
 
 		results = thread_network_session_list.perform(requests);
 		for (int i = 0; i < 2; i++) {
@@ -539,6 +556,35 @@ YouTubeVideoDetail youtube_load_video_page(std::string url) {
 				res.error = "Empty response data for URL index: " + std::to_string(i);
 				debug_error(res.error);
 				success = false;
+			}
+		}
+
+		// Fallback: If Android VR with auth returns UNPLAYABLE, retry with unauthenticated Android
+		if (use_android_vr && res.playability_status == "UNPLAYABLE") {
+			debug_info("Fallback to unauthenticated Android");
+
+			std::string fallback_content =
+			    R"({"videoId": "%0", %1"context": {"client": {"hl": "%2","gl": "%3","clientName": "ANDROID","clientVersion": "20.10.38","deviceMake": "Apple","deviceModel": "iPhone9,1","osName": "iPhone","userAgent": "com.google.ios.youtube/19.01.1 (iPhone9,1; U; CPU iOS 15_0_0 like Mac OS X;)\"","osVersion": "15.0.0.19A346", "visitorData": "%4"}}, "playbackContext": {"contentPlaybackContext": {"signatureTimestamp": "0"}}})";
+			fallback_content = std::regex_replace(fallback_content, std::regex("%0"), res.id);
+			fallback_content =
+			    std::regex_replace(fallback_content, std::regex("%1"),
+			                       playlist_id.empty() ? "" : "\"playlistId\": \"" + playlist_id + "\", ");
+			fallback_content = std::regex_replace(fallback_content, std::regex("%2"), language_code);
+			fallback_content = std::regex_replace(fallback_content, std::regex("%3"), country_code);
+			fallback_content = std::regex_replace(fallback_content, std::regex("%4"), visitor_data);
+
+			std::map<std::string, std::string> empty_headers;
+			auto fallback_result = http_post_json(get_innertube_api_url("player"), fallback_content, empty_headers);
+
+			if (fallback_result.first && !fallback_result.second.empty()) {
+				std::vector<char> fallback_data(fallback_result.second.begin(), fallback_result.second.end());
+				fallback_data.push_back('\0');
+				parse_json_destructive(
+				    (char *)&fallback_data[0],
+				    [&](Document &json_root, RJson data) { extract_player_data(json_root, data, res); },
+				    [&](const std::string &error) { debug_error("[v-fallback] " + error); });
+			} else {
+				debug_error("[v-fallback] Network request failed");
 			}
 		}
 	}

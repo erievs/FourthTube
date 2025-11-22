@@ -6,6 +6,9 @@
 struct SelectorView : public FixedSizeView {
   private:
 	UI::FlexibleString<SelectorView> title;
+	UI::FlexibleString<SelectorView> info_text;
+	bool has_info = false;
+	int popup_height = 30;
 
 	static constexpr double MARGIN_BUTTON_RATIO = 5.0;
 	bool isBoolean_ = false;
@@ -74,6 +77,20 @@ struct SelectorView : public FixedSizeView {
 		this->title = UI::FlexibleString<SelectorView>(title_func, *this);
 		return this;
 	}
+	SelectorView *set_info(const std::string &info_text) {
+		this->info_text = UI::FlexibleString<SelectorView>(info_text);
+		this->has_info = true;
+		return this;
+	}
+	SelectorView *set_info(std::function<std::string(const SelectorView &)> info_func) {
+		this->info_text = UI::FlexibleString<SelectorView>(info_func, *this);
+		this->has_info = true;
+		return this;
+	}
+	SelectorView *set_popup_height(int height) {
+		this->popup_height = height;
+		return this;
+	}
 	SelectorView *set_on_change(CallBackFuncType on_change_func) {
 		this->on_change_func = on_change_func;
 		return this;
@@ -81,6 +98,13 @@ struct SelectorView : public FixedSizeView {
 
 	void draw_() const override {
 		Draw(title, x0 + SMALL_MARGIN, y0, 0.5, 0.5, DEFAULT_TEXT_COLOR);
+
+		if (has_info) {
+			double title_width = Draw_get_width(title, 0.5);
+			double info_x = x0 + SMALL_MARGIN + title_width + 5;
+			Draw("ⓘ", info_x, y0, 0.45, 0.5, 0xFFFF9030);
+		}
+
 		if (isBoolean_ && selected_button == 0) {
 			Draw_texture(var_square_image[0], DEF_DRAW_WEAK_RED, button_x_left(selected_button), button_y_pos(),
 			             button_x_size(), button_y_size());
@@ -94,6 +118,20 @@ struct SelectorView : public FixedSizeView {
 		}
 	}
 	void update_(Hid_info key) override {
+		if (has_info && key.p_touch && key.touch_y >= y0 && key.touch_y < y0 + get_title_height()) {
+			double title_width = Draw_get_width(title, 0.5);
+			double info_x = x0 + SMALL_MARGIN + title_width + 5;
+			double info_width = Draw_get_width("ⓘ", 0.45);
+
+			if (key.touch_x >= info_x - 3 && key.touch_x < info_x + info_width + 3) {
+				extern void (*show_info_popup_callback)(const std::string &, int);
+				if (show_info_popup_callback) {
+					show_info_popup_callback(info_text, popup_height);
+				}
+				return;
+			}
+		}
+
 		if (key.p_touch && key.touch_y >= button_y_pos() && key.touch_y < button_y_pos() + button_y_size()) {
 			holding_button = get_button_id_from_x(key.touch_x);
 		}

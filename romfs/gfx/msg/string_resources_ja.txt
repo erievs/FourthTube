@@ -121,3 +121,21 @@
 <RESTART_TO_APPLY>適用にはアプリの再起動が必要です</RESTART_TO_APPLY>
 <VIDEO_SHOW_DEBUG_INFO>動画プレーヤーにデバッグ情報を表示</VIDEO_SHOW_DEBUG_INFO>
 <PLAYER_RESPONSE>使用するアプリデータ</PLAYER_RESPONSE>
+<PLAYER_RESPONSE_INFO>偽装するクライアントを変更します。\nログイン時はAndroid VRが使用され、\nこの設定は無視されます。</PLAYER_RESPONSE_INFO>
+<OAUTH>YouTubeログイン</OAUTH>
+<OAUTH_INFO>Android VRクライアントを使用して\nYouTubeにアクセスします。\n子供向け動画など、\n動画が再生できなかった場合は\n自動的に未認証のAndroidクライアントに\nフォールバックします。</OAUTH_INFO>
+<OAUTH_LOGIN>YouTubeにログイン</OAUTH_LOGIN>
+<OAUTH_LOGOUT>ログアウト</OAUTH_LOGOUT>
+<OAUTH_STATUS>ログイン状態</OAUTH_STATUS>
+<OAUTH_NOT_AUTHENTICATED>ログインしていません</OAUTH_NOT_AUTHENTICATED>
+<OAUTH_AUTHENTICATED>ログイン済み</OAUTH_AUTHENTICATED>
+<OAUTH_AUTHENTICATING>認証中...</OAUTH_AUTHENTICATING>
+<OAUTH_ERROR>認証エラー</OAUTH_ERROR>
+<OAUTH_DEVICE_CODE>デバイスコード</OAUTH_DEVICE_CODE>
+<OAUTH_USER_CODE>ユーザーコード: %0</OAUTH_USER_CODE>
+<OAUTH_VERIFICATION_URL>アクセス先: https://google.com/device</OAUTH_VERIFICATION_URL>
+<OAUTH_WAITING>認証を待機中...</OAUTH_WAITING>
+<OAUTH_TIMEOUT>認証がタイムアウトしました</OAUTH_TIMEOUT>
+<OAUTH_LOGIN_INSTRUCTION>1. ウェブブラウザを開く\n2. 表示されたURLにアクセス\n3. デバイスコードを入力\n4. アプリを承認</OAUTH_LOGIN_INSTRUCTION>
+<OAUTH_CONFIG_MISSING>OAuth認証情報が未設定です。\nsettings.txtを編集して\nIDとシークレットを入力してください。\n詳細はREADMEを参照してください。</OAUTH_CONFIG_MISSING>
+<OAUTH_TOKEN_WARNING>oauth_tokensファイルは絶対に\n他人と共有しないでください。\nこのファイルには、あなたのYouTube\nアカウントへのアクセス権限が含まれます。</OAUTH_TOKEN_WARNING>

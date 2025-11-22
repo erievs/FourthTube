@@ -8,6 +8,7 @@ bool var_night_mode = false;
 bool var_eco_mode = true;
 bool var_debug_mode = false;
 bool var_history_enabled = true;
+bool var_oauth_enabled = false;
 int var_autoplay_level = 2; // 0 : never, 1 : only in a playlist, 2 : always
 int var_loop_mode = false;
 int var_video_quality = 0;
