@@ -10,6 +10,7 @@
 #include "scenes/video_player.hpp"
 #include "ui/overlay.hpp"
 #include "ui/ui.hpp"
+#include "ui/views/specialized/succinct_channel.hpp"
 #include "youtube_parser/parser.hpp"
 #include "network_decoder/thumbnail_loader.hpp"
 #include "network_decoder/network_io.hpp"
@@ -82,6 +83,8 @@ namespace Settings {
 	int oauth_timeout_counter = 0;
 	const int OAUTH_CHECK_INTERVAL_FRAMES = 300;
 	const int OAUTH_TIMEOUT_SECONDS = 900;
+	
+	SuccinctChannelView *oauth_user_view = nullptr;
 	
 	Thread oauth_worker_thread;
 	
@@ -330,8 +333,22 @@ static void oauth_worker_thread_func(void *) {
 				oauth_timeout_counter = 0;
 				var_oauth_enabled = true;
 				misc_tasks_request(TASK_SAVE_SETTINGS);
-				
-				// Update popup to show success message with security warning
+
+				resource_lock.lock();
+				if (oauth_user_view) {
+					std::string user_name = OAuth::get_user_account_name();
+					std::string channel_id = OAuth::get_user_channel_id();
+					std::string photo_url = OAuth::get_user_photo_url();
+					
+				oauth_user_view->set_name(user_name);
+				oauth_user_view->set_auxiliary_lines({channel_id});
+				oauth_user_view->set_thumbnail_url(photo_url);
+				oauth_user_view->set_height(CHANNEL_ICON_HEIGHT);
+				if (!photo_url.empty()) {
+					oauth_user_view->thumbnail_handle = thumbnail_request(photo_url, SceneType::SETTINGS, PRIORITY_FOREGROUND, ThumbnailType::ICON);
+				}
+			}
+			resource_lock.unlock();
 				resource_lock.lock();
 				if (popup_view->is_visible) {
 					std::string success_msg = std::string(LOCALIZED(OAUTH_AUTHENTICATED)) + "\n\n" + LOCALIZED(OAUTH_TOKEN_WARNING);
@@ -792,6 +809,11 @@ void Sem_init(void) {
 							}
 						}),
 					(new EmptyView(0, 0, 320, SMALL_MARGIN)),
+					(oauth_user_view = (new SuccinctChannelView(0, 0, 320, 0))
+						->set_name("")
+						->set_auxiliary_lines({})
+						->set_thumbnail_url("")),
+					(new EmptyView(0, 0, 320, SMALL_MARGIN)),
 					(new TextView(10, 0, 120, DEFAULT_FONT_INTERVAL + SMALL_MARGIN * 2))
 						->set_text([] () {
 							return OAuth::oauth_state == OAuth::OAuthState::AUTHENTICATED ? 
@@ -814,6 +836,14 @@ void Sem_init(void) {
 								OAuth::revoke_tokens();
 								var_oauth_enabled = false;
 								misc_tasks_request(TASK_SAVE_SETTINGS);
+
+								if (oauth_user_view) {
+									oauth_user_view->set_name("");
+									oauth_user_view->set_auxiliary_lines({});
+									oauth_user_view->set_thumbnail_url("");
+									oauth_user_view->thumbnail_handle = -1;
+									oauth_user_view->set_height(0);
+								}
 							} else if (OAuth::oauth_state == OAuth::OAuthState::NOT_AUTHENTICATED) {
 								OAuth::start_device_flow();
 								if (OAuth::oauth_state == OAuth::OAuthState::AUTHENTICATING) {
@@ -889,6 +919,20 @@ void Sem_init(void) {
 	OAuth::init();
 	if (OAuth::is_authenticated()) {
 		var_oauth_enabled = true;
+
+		std::string user_name = OAuth::get_user_account_name();
+		std::string channel_id = OAuth::get_user_channel_id();
+		std::string photo_url = OAuth::get_user_photo_url();
+		
+		if (oauth_user_view && !user_name.empty()) {
+			oauth_user_view->set_name(user_name);
+			oauth_user_view->set_auxiliary_lines({channel_id});
+			oauth_user_view->set_thumbnail_url(photo_url);
+			oauth_user_view->set_height(CHANNEL_ICON_HEIGHT);
+			if (!photo_url.empty()) {
+				oauth_user_view->thumbnail_handle = thumbnail_request(photo_url, SceneType::SETTINGS, PRIORITY_FOREGROUND, ThumbnailType::ICON);
+			}
+		}
 	}
 	
 	show_info_popup_callback = show_info_popup;

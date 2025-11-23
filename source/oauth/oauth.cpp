@@ -1,11 +1,12 @@
 #include "headers.hpp"
 #include "oauth.hpp"
-#include "rapidjson_wrapper.hpp"
 #include "network_decoder/network_io.hpp"
 #include "data_io/settings.hpp"
 #include "util/log.hpp"
+#include "youtube_parser/internal_common.hpp"
 #include <3ds/services/ps.h>
 #include <cstring>
+#include <regex>
 
 namespace OAuth {
 const char *CLIENT_ID = "652469312169-4lvs9bnhr9lpns9v451j5oivd81vjvu1.apps.googleusercontent.com";
@@ -26,6 +27,10 @@ int expires_in = 0;
 int interval = 5;
 std::string access_token = "";
 std::string refresh_token = "";
+
+std::string user_account_name = "";
+std::string user_channel_id = "";
+std::string user_photo_url = "";
 
 static NetworkSessionList *session_list = nullptr;
 
@@ -192,6 +197,7 @@ void check_device_flow() {
 
 	oauth_state = OAuthState::AUTHENTICATED;
 	save_tokens();
+	fetch_library_data();
 }
 
 void refresh_access_token() {
@@ -247,6 +253,7 @@ void refresh_access_token() {
 
 	oauth_state = OAuthState::AUTHENTICATED;
 	save_tokens();
+	fetch_library_data();
 }
 
 void revoke_tokens() {
@@ -268,6 +275,9 @@ void revoke_tokens() {
 	verification_url = "";
 	oauth_state = OAuthState::NOT_AUTHENTICATED;
 	oauth_error_message = "";
+	user_account_name = "";
+	user_channel_id = "";
+	user_photo_url = "";
 
 	save_tokens();
 }
@@ -275,6 +285,12 @@ void revoke_tokens() {
 bool is_authenticated() { return oauth_state == OAuthState::AUTHENTICATED && !access_token.empty(); }
 
 std::string get_access_token() { return access_token; }
+
+std::string get_user_account_name() { return user_account_name; }
+
+std::string get_user_channel_id() { return user_channel_id; }
+
+std::string get_user_photo_url() { return user_photo_url; }
 
 static void encrypt_decrypt_data(std::vector<u8> &data) {
 	size_t original_size = data.size();
@@ -289,7 +305,8 @@ static void encrypt_decrypt_data(std::vector<u8> &data) {
 
 void save_tokens() {
 	std::string data = "<access_token>" + access_token + "</access_token>\n" + "<refresh_token>" + refresh_token +
-	                   "</refresh_token>\n";
+	                   "</refresh_token>\n" + "<user_name>" + user_account_name + "</user_name>\n" + "<channel_id>" +
+	                   user_channel_id + "</channel_id>\n" + "<photo_url>" + user_photo_url + "</photo_url>\n";
 
 	std::vector<u8> encrypted_data(data.begin(), data.end());
 	encrypt_decrypt_data(encrypted_data);
@@ -320,6 +337,12 @@ void load_tokens() {
 	size_t access_end = data_str.find("</access_token>");
 	size_t refresh_start = data_str.find("<refresh_token>");
 	size_t refresh_end = data_str.find("</refresh_token>");
+	size_t name_start = data_str.find("<user_name>");
+	size_t name_end = data_str.find("</user_name>");
+	size_t channel_start = data_str.find("<channel_id>");
+	size_t channel_end = data_str.find("</channel_id>");
+	size_t photo_start = data_str.find("<photo_url>");
+	size_t photo_end = data_str.find("</photo_url>");
 
 	if (access_start != std::string::npos && access_end != std::string::npos) {
 		access_start += 14;
@@ -329,6 +352,75 @@ void load_tokens() {
 	if (refresh_start != std::string::npos && refresh_end != std::string::npos) {
 		refresh_start += 15;
 		refresh_token = data_str.substr(refresh_start, refresh_end - refresh_start);
+	}
+
+	if (name_start != std::string::npos && name_end != std::string::npos) {
+		name_start += 11;
+		user_account_name = data_str.substr(name_start, name_end - name_start);
+	}
+
+	if (channel_start != std::string::npos && channel_end != std::string::npos) {
+		channel_start += 12;
+		user_channel_id = data_str.substr(channel_start, channel_end - channel_start);
+	}
+
+	if (photo_start != std::string::npos && photo_end != std::string::npos) {
+		photo_start += 11;
+		user_photo_url = data_str.substr(photo_start, photo_end - photo_start);
+	}
+}
+
+void fetch_library_data() {
+	if (!is_authenticated()) {
+		return;
+	}
+
+	std::string post_data = R"({"context":{"client":{"hl":")" + youtube_parser::language_code + R"(","gl":")" +
+	                        youtube_parser::country_code +
+	                        R"(","clientName":"ANDROID_VR","clientVersion":"1.62.27"}},"browseId":"FElibrary"})";
+
+	auto result = get_session().perform(HttpRequest::POST(
+	    "https://www.youtube.com/youtubei/v1/browse",
+	    {{"Content-Type", "application/json"}, {"Authorization", "Bearer " + access_token}}, post_data));
+
+	if (result.fail || result.status_code != 200) {
+		return;
+	}
+
+	result.data.push_back('\0');
+	rapidjson::Document json_root;
+	std::string error;
+	RJson response_json = RJson::parse(json_root, (char *)result.data.data(), error);
+	if (!error.empty()) {
+		return;
+	}
+
+	auto header =
+	    response_json["contents"]["singleColumnBrowseResultsRenderer"]["tabs"][(size_t)0]["tabRenderer"]["header"];
+	if (!header.has_key("activeAccountHeaderRenderer")) {
+		return;
+	}
+
+	auto account = header["activeAccountHeaderRenderer"];
+	if (account.has_key("accountName")) {
+		user_account_name = youtube_parser::get_text_from_object(account["accountName"]);
+	}
+	if (account.has_key("channelEndpoint")) {
+		user_channel_id = account["channelEndpoint"]["browseEndpoint"]["browseId"].string_value();
+	}
+	if (account.has_key("accountPhoto")) {
+		auto thumbnails = account["accountPhoto"]["thumbnails"].array_items();
+		if (!thumbnails.empty()) {
+			user_photo_url = thumbnails[0]["url"].string_value();
+			size_t s_pos = user_photo_url.find("=s");
+			if (s_pos != std::string::npos) {
+				size_t size_end = s_pos + 2;
+				while (size_end < user_photo_url.length() && isdigit(user_photo_url[size_end])) {
+					size_end++;
+				}
+				user_photo_url = user_photo_url.substr(0, size_end) + "-c-k-c0x00ffffff-no-rj";
+			}
+		}
 	}
 }
 } // namespace OAuth
