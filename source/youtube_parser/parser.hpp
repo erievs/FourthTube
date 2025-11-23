@@ -67,6 +67,7 @@ struct YouTubeVideoDetail {
 	std::string title;
 	std::string description;
 	YouTubeChannelSuccinct author;
+	bool metadata_from_android_vr = false;
 	std::string id;
 	std::string succinct_thumbnail_url;
 	std::string audio_stream_url;

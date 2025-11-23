@@ -984,17 +984,21 @@ static void load_video_page(void *arg) {
 			            {(new EmptyView(0, 0, SMALL_MARGIN, ICON_SIZE)), new_main_icon_view,
 			             (new EmptyView(0, 0, SMALL_MARGIN, ICON_SIZE)),
 			             (new VerticalListView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE))
-			                 ->set_views(
-			                     {(new EmptyView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE, ICON_SIZE * 0.1)),
-			                      (new TextView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE,
-			                                    DEFAULT_FONT_INTERVAL + SMALL_MARGIN))
-			                          ->set_text(tmp_video_info.author.name)
-			                          ->set_font_size(0.55, DEFAULT_FONT_INTERVAL + SMALL_MARGIN),
-			                      (new TextView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE, DEFAULT_FONT_INTERVAL))
-			                          ->set_text(std::regex_replace(LOCALIZED(SUBSCRIBER_COUNT), std::regex("%0"),
-			                                                        tmp_video_info.author.subscribers))
-			                          ->set_font_size(0.45, DEFAULT_FONT_INTERVAL + SMALL_MARGIN)
-			                          ->set_get_text_color([]() { return LIGHT1_TEXT_COLOR; })})}),
+			                 ->set_views({(new EmptyView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE, ICON_SIZE * 0.1)),
+			                              (new TextView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE,
+			                                            DEFAULT_FONT_INTERVAL + SMALL_MARGIN))
+			                                  ->set_text(tmp_video_info.author.name)
+			                                  ->set_font_size(0.55, DEFAULT_FONT_INTERVAL + SMALL_MARGIN),
+			                              (new TextView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE, DEFAULT_FONT_INTERVAL))
+			                                  ->set_text(tmp_video_info.author.subscribers.empty()
+			                                                 ? ""
+			                                                 : (tmp_video_info.metadata_from_android_vr
+			                                                        ? tmp_video_info.author.subscribers
+			                                                        : std::regex_replace(
+			                                                              LOCALIZED(SUBSCRIBER_COUNT), std::regex("%0"),
+			                                                              tmp_video_info.author.subscribers)))
+			                                  ->set_font_size(0.45, DEFAULT_FONT_INTERVAL + SMALL_MARGIN)
+			                                  ->set_get_text_color([]() { return LIGHT1_TEXT_COLOR; })})}),
 			    (new RuleView(0, 0, 320, SMALL_MARGIN * 2))->set_get_color([]() { return DEF_DRAW_GRAY; })};
 			if (tmp_video_info.is_upcoming) {
 				std::vector<View *> add_views = {
