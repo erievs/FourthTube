@@ -776,7 +776,7 @@ void Sem_init(void) {
                             (std::function<std::string ()>) []() { return "visionOS"; }
                         }, var_player_response)
                         ->set_title([](const SelectorView &) { return LOCALIZED(PLAYER_RESPONSE); })
-                        ->set_info([](const SelectorView &) { return LOCALIZED(PLAYER_RESPONSE_INFO); })
+                        ->set_info([](const SelectorView &) { return LOCALIZED(INFO_PLAYER_RESPONSE); })
                         ->set_popup_height(60)
                         ->set_on_change([](const SelectorView &view) {
                             if (var_player_response != view.selected_button) {
@@ -795,7 +795,7 @@ void Sem_init(void) {
 					// OAuth Settings Section
 					(new SectionTitleWithInfoView(0, 0, 320, DEFAULT_FONT_INTERVAL + SMALL_MARGIN * 2))
 						->set_title([] (const SectionTitleWithInfoView &) { return LOCALIZED(OAUTH); })
-						->set_info([] (const SectionTitleWithInfoView &) { return LOCALIZED(OAUTH_INFO); })
+						->set_info([] (const SectionTitleWithInfoView &) { return LOCALIZED(INFO_OAUTH); })
 						->set_popup_height(85),
 					(new TextView(0, 0, 320, DEFAULT_FONT_INTERVAL + SMALL_MARGIN))
 						->set_text([] () -> std::string {

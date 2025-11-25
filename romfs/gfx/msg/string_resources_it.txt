@@ -121,3 +121,21 @@
 <RESTART_TO_APPLY>Riavvia per applicare</RESTART_TO_APPLY>
 <VIDEO_SHOW_DEBUG_INFO>Mostra informazioni di debug nel video player</VIDEO_SHOW_DEBUG_INFO>
 <PLAYER_RESPONSE>Dati dell'app da utilizzare</PLAYER_RESPONSE>
+<INFO_PLAYER_RESPONSE>Change the spoofed client.\nAndroid VR is used when logged in,\nignoring this setting.</INFO_PLAYER_RESPONSE>
+<INFO_OAUTH>Accesses YouTube using\nAndroid VR client.\nAutomatically falls back to\nunauthenticated Android client\nif videos cannot be played,\nsuch as kids videos.</INFO_OAUTH>
+<OAUTH>YouTube Login</OAUTH>
+<OAUTH_LOGIN>Login to YouTube</OAUTH_LOGIN>
+<OAUTH_LOGOUT>Logout</OAUTH_LOGOUT>
+<OAUTH_STATUS>Login Status</OAUTH_STATUS>
+<OAUTH_NOT_AUTHENTICATED>Not logged in</OAUTH_NOT_AUTHENTICATED>
+<OAUTH_AUTHENTICATED>Logged in</OAUTH_AUTHENTICATED>
+<OAUTH_AUTHENTICATING>Authenticating...</OAUTH_AUTHENTICATING>
+<OAUTH_ERROR>Authentication error</OAUTH_ERROR>
+<OAUTH_DEVICE_CODE>Device Code</OAUTH_DEVICE_CODE>
+<OAUTH_USER_CODE>User Code: %0</OAUTH_USER_CODE>
+<OAUTH_VERIFICATION_URL>Visit: https://google.com/device</OAUTH_VERIFICATION_URL>
+<OAUTH_WAITING>Waiting for authentication...</OAUTH_WAITING>
+<OAUTH_TIMEOUT>Authentication timed out</OAUTH_TIMEOUT>
+<OAUTH_LOGIN_INSTRUCTION>1. Open a web browser\n2. Visit the URL shown\n3. Enter the device code\n4. Authorize the app</OAUTH_LOGIN_INSTRUCTION>
+<OAUTH_CONFIG_MISSING>OAuth credentials not set.\nEdit settings.txt\nand enter client ID and secret.\nSee README for details.</OAUTH_CONFIG_MISSING>
+<OAUTH_TOKEN_WARNING>Never share oauth_tokens file\nwith anyone. This file contains access\ncredentials to your YouTube account.</OAUTH_TOKEN_WARNING>
