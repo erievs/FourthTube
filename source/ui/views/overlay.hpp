@@ -48,8 +48,10 @@ struct OverlayView : public FixedSizeView {
 		if (key.p_touch && in_outside) {
 			holding_outside = true;
 		}
-		if (key.touch_x == -1 && holding_outside && on_cancel_func) {
-			on_cancel_func(*this);
+		if ((key.touch_x == -1 && holding_outside) || key.p_b) {
+			if (on_cancel_func) {
+				on_cancel_func(*this);
+			}
 		}
 		if (!in_outside) {
 			holding_outside = false;
