@@ -732,6 +732,8 @@ void Sem_init(void) {
 							(std::function<std::string ()>) []() { return LOCALIZED(ON); }
 						}, var_eco_mode)
 						->set_title([](const SelectorView &) { return LOCALIZED(ECO_MODE); })
+						->set_info([](const SelectorView &) { return LOCALIZED(INFO_ECO_MODE); })
+						->set_popup_height(60)
 						->set_on_change([](const SelectorView &view) {
 							if (var_eco_mode != view.selected_button) {
 								var_eco_mode = view.selected_button;
@@ -777,7 +779,7 @@ void Sem_init(void) {
                         }, var_player_response)
                         ->set_title([](const SelectorView &) { return LOCALIZED(PLAYER_RESPONSE); })
                         ->set_info([](const SelectorView &) { return LOCALIZED(INFO_PLAYER_RESPONSE); })
-                        ->set_popup_height(60)
+                        ->set_popup_height(50)
                         ->set_on_change([](const SelectorView &view) {
                             if (var_player_response != view.selected_button) {
                                 var_player_response = view.selected_button;

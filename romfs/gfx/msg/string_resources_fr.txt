@@ -125,6 +125,7 @@
 <PLAYER_RESPONSE>Données de l'application à utiliser</PLAYER_RESPONSE>
 -----DeepL translate-----
 
+<INFO_ECO_MODE>Saves battery by reducing\nscreen update frequency.\nWhen enabled, the screen is\nredrawn only when content changes.</INFO_ECO_MODE>
 <INFO_PLAYER_RESPONSE>Change the spoofed client.\nAndroid VR is used when logged in,\nignoring this setting.</INFO_PLAYER_RESPONSE>
 <INFO_OAUTH>Accesses YouTube using\nAndroid VR client.\nAutomatically falls back to\nunauthenticated Android client\nif videos cannot be played,\nsuch as kids videos.</INFO_OAUTH>
 <OAUTH>YouTube Login</OAUTH>
