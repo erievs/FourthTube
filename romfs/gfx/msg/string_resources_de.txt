@@ -141,5 +141,4 @@
 <OAUTH_WAITING>Waiting for authentication...</OAUTH_WAITING>
 <OAUTH_TIMEOUT>Authentication timed out</OAUTH_TIMEOUT>
 <OAUTH_LOGIN_INSTRUCTION>1. Open a web browser\n2. Visit the URL shown\n3. Enter the device code\n4. Authorize the app</OAUTH_LOGIN_INSTRUCTION>
-<OAUTH_CONFIG_MISSING>OAuth credentials not set.\nEdit settings.txt\nand enter client ID and secret.\nSee README for details.</OAUTH_CONFIG_MISSING>
 <OAUTH_TOKEN_WARNING>Never share oauth_tokens file\nwith anyone. This file contains access\ncredentials to your YouTube account.</OAUTH_TOKEN_WARNING>
