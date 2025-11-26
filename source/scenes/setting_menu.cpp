@@ -340,16 +340,14 @@ static void oauth_worker_thread_func(void *) {
 					std::string channel_id = OAuth::get_user_channel_id();
 					std::string photo_url = OAuth::get_user_photo_url();
 					
-				oauth_user_view->set_name(user_name);
-				oauth_user_view->set_auxiliary_lines({channel_id});
-				oauth_user_view->set_thumbnail_url(photo_url);
-				oauth_user_view->set_height(CHANNEL_ICON_HEIGHT);
-				if (!photo_url.empty()) {
-					oauth_user_view->thumbnail_handle = thumbnail_request(photo_url, SceneType::SETTINGS, PRIORITY_FOREGROUND, ThumbnailType::ICON);
+					oauth_user_view->set_name(user_name);
+					oauth_user_view->set_auxiliary_lines({channel_id});
+					oauth_user_view->set_thumbnail_url(photo_url);
+					oauth_user_view->set_height(CHANNEL_ICON_HEIGHT);
+					if (!photo_url.empty()) {
+						oauth_user_view->thumbnail_handle = thumbnail_request(photo_url, SceneType::SETTINGS, PRIORITY_FOREGROUND, ThumbnailType::ICON);
+					}
 				}
-			}
-			resource_lock.unlock();
-				resource_lock.lock();
 				if (popup_view->is_visible) {
 					std::string success_msg = std::string(LOCALIZED(OAUTH_AUTHENTICATED)) + "\n\n" + LOCALIZED(OAUTH_TOKEN_WARNING);
 					popup_view->get_message_view()->set_text_lines(split_string(success_msg, '\n'))->update_y_range(0, 80);
