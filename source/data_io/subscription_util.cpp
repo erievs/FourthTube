@@ -2,7 +2,10 @@
 #include "subscription_util.hpp"
 #include "util/util.hpp"
 #include "ui/ui.hpp"
-#include "rapidjson_wrapper.hpp"
+#include "system/file.hpp"
+#include "youtube_parser/internal_common.hpp"
+#include "oauth/oauth.hpp"
+#include <set>
 
 using namespace rapidjson;
 
@@ -157,4 +160,84 @@ std::vector<SubscriptionChannel> get_valid_subscribed_channels() {
 	}
 	resource_lock.unlock();
 	return res;
+}
+
+std::vector<SubscriptionChannel> get_oauth_subscribed_channels() {
+	std::vector<SubscriptionChannel> result;
+
+	RJson data = OAuth::fetch_browse_data("FEchannels");
+	if (!data.is_valid()) {
+		return result;
+	}
+
+	std::set<std::string> seen_ids;
+
+	auto contents = data["contents"]["singleColumnBrowseResultsRenderer"]["tabs"][(size_t)0]["tabRenderer"]["content"]
+	                    ["sectionListRenderer"]["contents"];
+
+	for (auto section : contents.array_items()) {
+		if (!section.has_key("shelfRenderer")) {
+			continue;
+		}
+
+		auto items = section["shelfRenderer"]["content"]["verticalListRenderer"]["items"];
+
+		for (auto item : items.array_items()) {
+			if (!item.has_key("compactChannelRenderer")) {
+				continue;
+			}
+
+			auto renderer = item["compactChannelRenderer"];
+
+			if (!renderer.has_key("channelId")) {
+				continue;
+			}
+
+			SubscriptionChannel channel;
+			channel.id = renderer["channelId"].string_value();
+
+			if (seen_ids.count(channel.id)) {
+				continue;
+			}
+			seen_ids.insert(channel.id);
+
+			if (renderer.has_key("navigationEndpoint")) {
+				auto browse_id = renderer["navigationEndpoint"]["browseEndpoint"]["browseId"].string_value();
+				if (!browse_id.empty()) {
+					channel.url = "https://m.youtube.com/channel/" + browse_id;
+				}
+			}
+			if (channel.url.empty()) {
+				channel.url = "https://m.youtube.com/channel/" + channel.id;
+			}
+
+			if (renderer.has_key("displayName")) {
+				channel.name = youtube_parser::get_text_from_object(renderer["displayName"]);
+			}
+			if (channel.name.empty() && renderer.has_key("title")) {
+				channel.name = youtube_parser::get_text_from_object(renderer["title"]);
+			}
+
+			if (renderer.has_key("videoCountText")) {
+				channel.subscriber_count_str = youtube_parser::get_text_from_object(renderer["videoCountText"]);
+			}
+
+			if (renderer.has_key("thumbnail")) {
+				auto thumbnails = renderer["thumbnail"]["thumbnails"];
+				if (thumbnails.array_items().size() > 0) {
+					channel.icon_url = youtube_parser::get_thumbnail_url_exact(thumbnails, 72);
+				}
+			}
+
+			channel.valid = is_valid_subscription_channel(channel);
+			if (channel.valid && !channel.name.empty()) {
+				result.push_back(channel);
+			}
+		}
+	}
+
+	std::sort(result.begin(), result.end(), [](const auto &i, const auto &j) { return i.name < j.name; });
+
+	logger.info("oauth-subsc", "Loaded " + std::to_string(result.size()) + " OAuth channels");
+	return result;
 }

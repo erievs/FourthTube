@@ -15,6 +15,7 @@
 #include "network_decoder/thumbnail_loader.hpp"
 #include "util/misc_tasks.hpp"
 #include "util/async_task.hpp"
+#include "oauth/oauth.hpp"
 
 #define MAX_THUMBNAIL_LOAD_REQUEST 12
 
@@ -31,6 +32,7 @@ Mutex resource_lock;
 
 YouTubeHomeResult home_info;
 std::vector<SubscriptionChannel> subscribed_channels;
+std::vector<SubscriptionChannel> oauth_subscribed_channels;
 bool clicked_is_video;
 std::string clicked_url;
 
@@ -44,8 +46,11 @@ TabView *main_tab_view = NULL;
 ScrollView *home_tab_view = NULL;
 VerticalListView *home_videos_list_view = NULL;
 View *home_videos_bottom_view = new EmptyView(0, 0, 320, 0);
-ScrollView *channels_tab_view = NULL;
-VerticalListView *channels_tab_list_view = NULL;
+View *channels_tab_view = NULL;
+ScrollView *local_channels_tab_view = NULL;
+VerticalListView *local_channels_list_view = NULL;
+ScrollView *oauth_channels_tab_view = NULL;
+VerticalListView *oauth_channels_list_view = NULL;
 VerticalListView *feed_tab_view = NULL;
 ScrollView *feed_videos_view = NULL;
 VerticalListView *feed_videos_list_view = NULL;
@@ -56,6 +61,7 @@ static void load_home_page(void *);
 static void load_home_page_more(void *);
 static void load_subscription_feed(void *);
 static void update_subscribed_channels(const std::vector<SubscriptionChannel> &new_subscribed_channels);
+static void update_oauth_subscribed_channels(const std::vector<SubscriptionChannel> &new_oauth_channels);
 
 void Home_init(void) {
 	logger.info("subsc/init", "Initializing...");
@@ -64,13 +70,25 @@ void Home_init(void) {
 	                            ->set_margin(SMALL_MARGIN)
 	                            ->enable_thumbnail_request_update(MAX_THUMBNAIL_LOAD_REQUEST, SceneType::HOME);
 	home_tab_view = (new ScrollView(0, 0, 320, 0))->set_views({home_videos_list_view, home_videos_bottom_view});
-	channels_tab_list_view = (new VerticalListView(0, 0, 320))
-	                             ->set_margin(SMALL_MARGIN)
-	                             ->enable_thumbnail_request_update(MAX_THUMBNAIL_LOAD_REQUEST, SceneType::HOME);
-	channels_tab_view =
-	    (new ScrollView(0, 0, 320, 0))
-	        ->set_views(
-	            {channels_tab_list_view}); // height : dummy(set properly by set_stretch_subview(true) on main_tab_view)
+	local_channels_list_view = (new VerticalListView(0, 0, 320))
+	                               ->set_margin(SMALL_MARGIN)
+	                               ->enable_thumbnail_request_update(MAX_THUMBNAIL_LOAD_REQUEST, SceneType::HOME);
+	local_channels_tab_view = (new ScrollView(0, 0, 320, 0))->set_views({local_channels_list_view});
+	oauth_channels_list_view = (new VerticalListView(0, 0, 320))
+	                               ->set_margin(SMALL_MARGIN)
+	                               ->enable_thumbnail_request_update(MAX_THUMBNAIL_LOAD_REQUEST, SceneType::HOME);
+	oauth_channels_tab_view = (new ScrollView(0, 0, 320, 0))->set_views({oauth_channels_list_view});
+
+	if (OAuth::is_authenticated()) {
+		channels_tab_view =
+		    (new TabView(0, 0, 320, 0))
+		        ->set_views({local_channels_tab_view, oauth_channels_tab_view})
+		        ->set_tab_texts<std::function<std::string()>>(
+		            {[]() { return LOCALIZED(LOCAL_CHANNELS); }, []() { return LOCALIZED(YOUTUBE_CHANNELS); }})
+		        ->set_lr_tab_switch_enabled(false);
+	} else {
+		channels_tab_view = local_channels_tab_view;
+	}
 	feed_videos_list_view = (new VerticalListView(0, 0, 320))
 	                            ->set_margin(SMALL_MARGIN)
 	                            ->enable_thumbnail_request_update(MAX_THUMBNAIL_LOAD_REQUEST, SceneType::HOME);
@@ -122,6 +140,12 @@ void Home_init(void) {
 	load_subscription();
 	queue_async_task(load_subscription_feed, NULL);
 
+	if (OAuth::is_authenticated()) {
+		resource_lock.lock();
+		update_oauth_subscribed_channels(get_oauth_subscribed_channels());
+		resource_lock.unlock();
+	}
+
 	Home_resume("");
 	already_init = true;
 }
@@ -140,13 +164,54 @@ void Home_exit(void) {
 	feed_videos_view = NULL;
 	feed_videos_list_view = NULL;
 	channels_tab_view = NULL;
-	channels_tab_list_view = NULL;
+	local_channels_tab_view = NULL;
+	local_channels_list_view = NULL;
+	oauth_channels_tab_view = NULL;
+	oauth_channels_list_view = NULL;
 
 	resource_lock.unlock();
 
 	logger.info("subsc/exit", "Exited.");
 }
 void Home_suspend(void) { thread_suspend = true; }
+
+void Home_rebuild_channels_tab(void) {
+	if (!already_init) {
+		return;
+	}
+
+	resource_lock.lock();
+
+	if (channels_tab_view) {
+		std::vector<View *> main_views = main_tab_view->views;
+
+		TabView *old_tab = dynamic_cast<TabView *>(channels_tab_view);
+		if (old_tab) {
+			old_tab->views.clear();
+			delete old_tab;
+		}
+		channels_tab_view = NULL;
+
+		if (OAuth::is_authenticated()) {
+			channels_tab_view =
+			    (new TabView(0, 0, 320, 0))
+			        ->set_views({local_channels_tab_view, oauth_channels_tab_view})
+			        ->set_tab_texts<std::function<std::string()>>(
+			            {[]() { return LOCALIZED(LOCAL_CHANNELS); }, []() { return LOCALIZED(YOUTUBE_CHANNELS); }})
+			        ->set_lr_tab_switch_enabled(false);
+			update_oauth_subscribed_channels(get_oauth_subscribed_channels());
+		} else {
+			channels_tab_view = local_channels_tab_view;
+		}
+
+		main_views[1] = channels_tab_view;
+		main_tab_view->views = main_views;
+	}
+
+	resource_lock.unlock();
+	var_need_refresh = true;
+}
+
 void Home_resume(std::string arg) {
 	(void)arg;
 
@@ -158,6 +223,9 @@ void Home_resume(std::string arg) {
 	resource_lock.lock();
 	update_subscribed_channels(get_valid_subscribed_channels());
 	resource_lock.unlock();
+
+	// Rebuild tabs if login status changed
+	Home_rebuild_channels_tab();
 }
 
 // async functions
@@ -383,7 +451,26 @@ static void update_subscribed_channels(const std::vector<SubscriptionChannel> &n
 		});
 		new_views.push_back(cur_view);
 	}
-	channels_tab_list_view->swap_views(new_views); // avoid unnecessary thumbnail reloading
+	local_channels_list_view->swap_views(new_views);
+}
+
+static void update_oauth_subscribed_channels(const std::vector<SubscriptionChannel> &new_oauth_channels) {
+	oauth_subscribed_channels = new_oauth_channels;
+
+	std::vector<View *> new_views;
+	for (auto channel : new_oauth_channels) {
+		SuccinctChannelView *cur_view = (new SuccinctChannelView(0, 0, 320, CHANNEL_ICON_HEIGHT));
+		cur_view->set_name(channel.name);
+		cur_view->set_auxiliary_lines({channel.subscriber_count_str});
+		cur_view->set_thumbnail_url(channel.icon_url);
+		cur_view->set_get_background_color(View::STANDARD_BACKGROUND);
+		cur_view->set_on_view_released([channel](View &view) {
+			clicked_url = channel.url;
+			clicked_is_video = false;
+		});
+		new_views.push_back(cur_view);
+	}
+	oauth_channels_list_view->swap_views(new_views);
 }
 
 void Home_draw(void) {
@@ -437,7 +524,25 @@ void Home_draw(void) {
 		update_overlay_menu(&key);
 
 		home_tab_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT - main_tab_view->tab_selector_height);
-		channels_tab_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT - main_tab_view->tab_selector_height);
+
+		TabView *channels_tab_as_tabview = dynamic_cast<TabView *>(channels_tab_view);
+		if (channels_tab_as_tabview) {
+			local_channels_tab_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT -
+			                                               main_tab_view->tab_selector_height -
+			                                               channels_tab_as_tabview->tab_selector_height);
+			oauth_channels_tab_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT -
+			                                               main_tab_view->tab_selector_height -
+			                                               channels_tab_as_tabview->tab_selector_height);
+		} else {
+			local_channels_tab_view->update_y_range(0,
+			                                        CONTENT_Y_HIGH - TOP_HEIGHT - main_tab_view->tab_selector_height);
+		}
+
+		FixedHeightView *channels_fixed = dynamic_cast<FixedHeightView *>(channels_tab_view);
+		if (channels_fixed) {
+			channels_fixed->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT - main_tab_view->tab_selector_height);
+		}
+
 		feed_videos_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT - main_tab_view->tab_selector_height -
 		                                        FEED_RELOAD_BUTTON_HEIGHT - SMALL_MARGIN);
 		main_view->update(key);

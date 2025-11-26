@@ -42,6 +42,12 @@ static NetworkSessionList &get_session() {
 	return *session_list;
 }
 
+static std::string create_browse_request(const std::string &browse_id) {
+	return R"({"context":{"client":{"hl":")" + youtube_parser::language_code + R"(","gl":")" +
+	       youtube_parser::country_code + R"(","clientName":"ANDROID_VR","clientVersion":"1.62.27"}},"browseId":")" +
+	       browse_id + R"("})";
+}
+
 void init() {
 	psInit();
 
@@ -256,6 +262,35 @@ void refresh_access_token() {
 	fetch_library_data();
 }
 
+RJson fetch_browse_data(const std::string &browse_id) {
+	if (!is_authenticated()) {
+		return RJson();
+	}
+
+	std::string post_data = create_browse_request(browse_id);
+
+	auto response = get_session().perform(HttpRequest::POST(
+	    "https://www.youtube.com/youtubei/v1/browse",
+	    {{"Content-Type", "application/json"}, {"Authorization", "Bearer " + access_token}}, post_data));
+
+	if (response.fail || response.status_code != 200) {
+		logger.error("OAuth", "Failed to fetch browse data for " + browse_id);
+		return RJson();
+	}
+
+	response.data.push_back('\0');
+	static rapidjson::Document json_root;
+	std::string error;
+	RJson data = RJson::parse(json_root, (char *)response.data.data(), error);
+
+	if (!error.empty()) {
+		logger.error("OAuth", "Failed to parse browse JSON: " + error);
+		return RJson();
+	}
+
+	return data;
+}
+
 void revoke_tokens() {
 	if (!access_token.empty()) {
 		std::string post_data = "token=" + access_token;
@@ -375,9 +410,7 @@ void fetch_library_data() {
 		return;
 	}
 
-	std::string post_data = R"({"context":{"client":{"hl":")" + youtube_parser::language_code + R"(","gl":")" +
-	                        youtube_parser::country_code +
-	                        R"(","clientName":"ANDROID_VR","clientVersion":"1.62.27"}},"browseId":"FElibrary"})";
+	std::string post_data = create_browse_request("FElibrary");
 
 	auto result = get_session().perform(HttpRequest::POST(
 	    "https://www.youtube.com/youtubei/v1/browse",
