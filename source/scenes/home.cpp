@@ -36,6 +36,8 @@ std::vector<SubscriptionChannel> oauth_subscribed_channels;
 bool clicked_is_video;
 std::string clicked_url;
 
+bool last_oauth_state = false;
+
 int feed_loading_progress = 0;
 int feed_loading_total = 0;
 
@@ -146,6 +148,8 @@ void Home_init(void) {
 		resource_lock.unlock();
 	}
 
+	last_oauth_state = OAuth::is_authenticated();
+
 	Home_resume("");
 	already_init = true;
 }
@@ -225,7 +229,11 @@ void Home_resume(std::string arg) {
 	resource_lock.unlock();
 
 	// Rebuild tabs if login status changed
-	Home_rebuild_channels_tab();
+	bool current_oauth_state = OAuth::is_authenticated();
+	if (current_oauth_state != last_oauth_state) {
+		Home_rebuild_channels_tab();
+		last_oauth_state = current_oauth_state;
+	}
 }
 
 // async functions
