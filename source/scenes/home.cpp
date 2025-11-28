@@ -72,6 +72,7 @@ static void load_home_page_more(void *);
 static void load_subscription_feed(void *);
 static void load_oauth_subscription_feed(void *);
 static void load_oauth_subscription_feed_more(void *);
+static void load_oauth_subscribed_channels(void *);
 static void update_subscribed_channels(const std::vector<SubscriptionChannel> &new_subscribed_channels);
 static void update_oauth_subscribed_channels(const std::vector<SubscriptionChannel> &new_oauth_channels);
 
@@ -95,7 +96,13 @@ void Home_init(void) {
 	oauth_channels_list_view = (new VerticalListView(0, 0, 320))
 	                               ->set_margin(SMALL_MARGIN)
 	                               ->enable_thumbnail_request_update(MAX_THUMBNAIL_LOAD_REQUEST, SceneType::HOME);
-	oauth_channels_tab_view = (new ScrollView(0, 0, 320, 0))->set_views({oauth_channels_list_view});
+	oauth_channels_tab_view = (new ScrollView(0, 0, 320, 0))
+	                              ->set_views({oauth_channels_list_view})
+	                              ->set_pull_to_refresh(true, []() {
+		                              if (!is_async_task_running(load_oauth_subscribed_channels)) {
+			                              queue_async_task(load_oauth_subscribed_channels, NULL);
+		                              }
+	                              });
 
 	if (OAuth::is_authenticated()) {
 		channels_tab_view =
@@ -869,6 +876,28 @@ static void update_oauth_subscribed_channels(const std::vector<SubscriptionChann
 		new_views.push_back(cur_view);
 	}
 	oauth_channels_list_view->swap_views(new_views);
+}
+
+static void load_oauth_subscribed_channels(void *) {
+	if (!OAuth::is_authenticated()) {
+		resource_lock.lock();
+		if (oauth_channels_tab_view) {
+			oauth_channels_tab_view->finish_pull_refresh();
+		}
+		resource_lock.unlock();
+		return;
+	}
+
+	resource_lock.lock();
+	auto new_oauth_channels = get_oauth_subscribed_channels();
+	update_oauth_subscribed_channels(new_oauth_channels);
+
+	if (oauth_channels_tab_view) {
+		oauth_channels_tab_view->finish_pull_refresh();
+	}
+
+	var_need_refresh = true;
+	resource_lock.unlock();
 }
 
 void Home_draw(void) {
