@@ -1,4 +1,4 @@
-﻿<TEST>テスト</TEST>
+<TEST>テスト</TEST>
 <ON>オン</ON>
 <OFF>オフ</OFF>
 <ENABLED>有効</ENABLED>

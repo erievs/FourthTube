@@ -1,5 +1,6 @@
 #include <deque>
 #include <numeric>
+#include <cmath>
 #include "ui/views/scroll.hpp"
 #include "ui/ui_common.hpp"
 #include "variables.hpp"
@@ -29,9 +30,55 @@ void ScrollView::update_scroller(Hid_info key) {
 	if (inertia) {
 		var_need_refresh = true;
 	}
-	if (offset < 0) {
+	if (pull_to_refresh_enabled && offset < 0) {
+		float consistent_pull_distance = pull_refresh_threshold * 0.8f;
+		float trigger_threshold = consistent_pull_distance * 0.85f;
+
+		if (offset < -consistent_pull_distance) {
+			offset = -consistent_pull_distance;
+			inertia = 0;
+		}
+
+		if (offset <= -trigger_threshold && !pull_refresh_triggered && !pull_refresh_loading) {
+			if (key.touch_x == -1 && last_touch_x != -1) {
+				pull_refresh_triggered = true;
+				pull_refresh_loading = true;
+				pull_refresh_animation_frame = 0;
+				if (on_pull_refresh) {
+					on_pull_refresh();
+				}
+			}
+		}
+
+		if (pull_refresh_loading) {
+			pull_refresh_animation_frame++;
+			pull_refresh_rotation += 10.0f;
+			if (pull_refresh_rotation >= 360.0f) {
+				pull_refresh_rotation -= 360.0f;
+			}
+		} else if (offset < 0) {
+			pull_refresh_rotation = (-offset / trigger_threshold) * 180.0f;
+		}
+
+		if (key.touch_x == -1) {
+			if (pull_refresh_loading) {
+				offset = -consistent_pull_distance;
+				var_need_refresh = true;
+			} else if (offset < -2) {
+				offset = std::min(0.0, offset + 5.0);
+				var_need_refresh = true;
+			} else {
+				offset = 0;
+				if (pull_refresh_triggered) {
+					pull_refresh_triggered = false;
+					pull_refresh_rotation = 0.0f;
+				}
+			}
+		}
+	} else if (offset < 0) {
 		offset = 0;
 		inertia = 0;
+		pull_refresh_triggered = false;
 	}
 	if (offset > scroll_max) {
 		offset = scroll_max;
@@ -110,6 +157,31 @@ void ScrollView::draw_slider_bar() const {
 		float bar_pos = (float)offset / content_height * displayed_height;
 		Draw_texture(var_square_image[0], DEF_DRAW_GRAY, x1 - 3, y0 + bar_pos, 3, bar_len);
 	}
+
+	if (pull_to_refresh_enabled && pull_refresh_loading) {
+		u32 indicator_alpha = 200;
+		u32 final_color = (indicator_alpha << 24) | DEF_DRAW_WEAK_GREEN;
+
+		float center_x = x0 + (x1 - x0) / 2;
+		float center_y = y0 + 20;
+
+		float size = 14;
+
+		int segments = 8;
+		float segment_angle = 360.0f / segments;
+
+		for (int i = 0; i < segments; i++) {
+			float angle = (i * segment_angle + pull_refresh_rotation) * 3.14159f / 180.0f;
+			float radius = size * 0.6f;
+			float seg_x = center_x + cos(angle) * radius;
+			float seg_y = center_y + sin(angle) * radius;
+
+			u32 seg_alpha = (u32)((indicator_alpha * (segments - i % 4)) / segments);
+			u32 seg_color = (seg_alpha << 24) | DEF_DRAW_WEAK_GREEN;
+
+			Draw_texture(var_square_image[0], seg_color, seg_x - 1.5f, seg_y - 1.5f, 3, 3);
+		}
+	}
 }
 void ScrollView::on_resume() {
 	last_touch_x = last_touch_y = -1;
@@ -119,6 +191,10 @@ void ScrollView::on_resume() {
 	selected_darkness = 0;
 	scrolling = false;
 	grabbed = false;
+	pull_refresh_triggered = false;
+	pull_refresh_loading = false;
+	pull_refresh_rotation = 0.0f;
+	pull_refresh_animation_frame = 0;
 }
 void ScrollView::reset() {
 	on_resume();

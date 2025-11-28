@@ -48,6 +48,13 @@ static std::string create_browse_request(const std::string &browse_id) {
 	       browse_id + R"("})";
 }
 
+static std::string create_browse_request_with_continuation(const std::string &browse_id,
+                                                           const std::string &continuation_token) {
+	return R"({"context":{"client":{"hl":")" + youtube_parser::language_code + R"(","gl":")" +
+	       youtube_parser::country_code + R"(","clientName":"ANDROID_VR","clientVersion":"1.62.27"}},"browseId":")" +
+	       browse_id + R"(","continuation":")" + continuation_token + R"("})";
+}
+
 void init() {
 	psInit();
 
@@ -285,6 +292,35 @@ RJson fetch_browse_data(const std::string &browse_id) {
 
 	if (!error.empty()) {
 		logger.error("OAuth", "Failed to parse browse JSON: " + error);
+		return RJson();
+	}
+
+	return data;
+}
+
+RJson fetch_browse_data_with_continuation(const std::string &browse_id, const std::string &continuation_token) {
+	if (!is_authenticated()) {
+		return RJson();
+	}
+
+	std::string post_data = create_browse_request_with_continuation(browse_id, continuation_token);
+
+	auto response = get_session().perform(HttpRequest::POST(
+	    "https://www.youtube.com/youtubei/v1/browse",
+	    {{"Content-Type", "application/json"}, {"Authorization", "Bearer " + access_token}}, post_data));
+
+	if (response.fail || response.status_code != 200) {
+		logger.error("OAuth", "Failed to fetch browse data with continuation for " + browse_id);
+		return RJson();
+	}
+
+	response.data.push_back('\0');
+	static rapidjson::Document json_root_continuation;
+	std::string error;
+	RJson data = RJson::parse(json_root_continuation, (char *)response.data.data(), error);
+
+	if (!error.empty()) {
+		logger.error("OAuth", "Failed to parse continuation browse JSON: " + error);
 		return RJson();
 	}
 

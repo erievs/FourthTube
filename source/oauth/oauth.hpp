@@ -41,4 +41,5 @@ void load_tokens();
 
 void fetch_library_data();
 RJson fetch_browse_data(const std::string &browse_id);
+RJson fetch_browse_data_with_continuation(const std::string &browse_id, const std::string &continuation_token);
 } // namespace OAuth
