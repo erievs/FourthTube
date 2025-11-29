@@ -111,6 +111,7 @@
 <SHOW_FULL_DISLIKE>Mostrar todos los No me gusta/Like</SHOW_FULL_DISLIKE>
 <HIDE_POINTER>Hide pointer</HIDE_POINTER>
 <DARK_THEME>Tema Oscuro</DARK_THEME>
+<DISABLE_PULL_TO_REFRESH>Disable pull-to-refresh</DISABLE_PULL_TO_REFRESH>
 <AUTOPLAY>Reproducción automática</AUTOPLAY>
 <LOOP>Bucle</LOOP>
 <ONLY_IN_PLAYLIST>Solo en listas de reproducción</ONLY_IN_PLAYLIST>
@@ -123,6 +124,7 @@
 <RESTART_TO_APPLY>Restablecer para aplicar</RESTART_TO_APPLY>
 <VIDEO_SHOW_DEBUG_INFO>Mostrar información para nerds</VIDEO_SHOW_DEBUG_INFO>
 <PLAYER_RESPONSE>Datos de la aplicación para usar</PLAYER_RESPONSE>
+<INFO_DISABLE_PULL_TO_REFRESH>Disables pull-to-refresh in all tabs.\nWhen enabled, shows a reload button\nin the New tab instead.</INFO_DISABLE_PULL_TO_REFRESH>
 <INFO_ECO_MODE>Saves battery by reducing\nscreen update frequency.\nWhen enabled, the screen is\nredrawn only when content changes.</INFO_ECO_MODE>
 <INFO_PLAYER_RESPONSE>Change the spoofed client.\nAndroid VR is used when logged in,\nignoring this setting.</INFO_PLAYER_RESPONSE>
 <INFO_OAUTH>Accesses YouTube using\nAndroid VR client.\nAutomatically falls back to\nunauthenticated Android client\nif videos cannot be played,\nsuch as kids videos.</INFO_OAUTH>

@@ -5,6 +5,7 @@ extern bool var_need_refresh;
 extern bool var_allow_send_app_info;
 extern bool var_hide_pointer;
 extern bool var_night_mode;
+extern bool var_disable_pull_to_refresh;
 extern bool var_eco_mode;
 extern bool var_debug_mode;
 extern bool var_history_enabled;

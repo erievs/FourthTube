@@ -84,7 +84,7 @@ void Home_init(void) {
 	                            ->enable_thumbnail_request_update(MAX_THUMBNAIL_LOAD_REQUEST, SceneType::HOME);
 	home_tab_view = (new ScrollView(0, 0, 320, 0))
 	                    ->set_views({home_videos_list_view, home_videos_bottom_view})
-	                    ->set_pull_to_refresh(true, []() {
+	                    ->set_pull_to_refresh(!var_disable_pull_to_refresh, []() {
 		                    if (!is_async_task_running(load_home_page)) {
 			                    queue_async_task(load_home_page, NULL);
 		                    }
@@ -98,7 +98,7 @@ void Home_init(void) {
 	                               ->enable_thumbnail_request_update(MAX_THUMBNAIL_LOAD_REQUEST, SceneType::HOME);
 	oauth_channels_tab_view = (new ScrollView(0, 0, 320, 0))
 	                              ->set_views({oauth_channels_list_view})
-	                              ->set_pull_to_refresh(true, []() {
+	                              ->set_pull_to_refresh(!var_disable_pull_to_refresh, []() {
 		                              if (!is_async_task_running(load_oauth_subscribed_channels)) {
 			                              queue_async_task(load_oauth_subscribed_channels, NULL);
 		                              }
@@ -117,35 +117,109 @@ void Home_init(void) {
 	local_feed_videos_list_view = (new VerticalListView(0, 0, 320))
 	                                  ->set_margin(SMALL_MARGIN)
 	                                  ->enable_thumbnail_request_update(MAX_THUMBNAIL_LOAD_REQUEST, SceneType::HOME);
-	local_feed_videos_view =
-	    (new ScrollView(0, 0, 320, 0))->set_views({local_feed_videos_list_view})->set_pull_to_refresh(true, []() {
-		    if (!is_async_task_running(load_subscription_feed)) {
-			    queue_async_task(load_subscription_feed, NULL);
-		    }
-	    });
+
+	if (var_disable_pull_to_refresh) {
+		local_feed_videos_view = (new ScrollView(0, 0, 320, 0))->set_views({local_feed_videos_list_view});
+		feed_tab_view =
+		    (new VerticalListView(0, 0, 320))
+		        ->set_views(
+		            {(new TextView(0, 0, 320, FEED_RELOAD_BUTTON_HEIGHT))
+		                 ->set_text((std::function<std::string()>)[]() {
+			                 auto res = LOCALIZED(RELOAD);
+			                 if (is_async_task_running(load_subscription_feed)) {
+				                 res += " (" + std::to_string(feed_loading_progress) + "/" +
+				                        std::to_string(feed_loading_total) + ")";
+			                 }
+			                 return res;
+		                 })
+		                 ->set_text_offset(SMALL_MARGIN, -1)
+		                 ->set_on_view_released([](View &) {
+			                 if (!is_async_task_running(load_subscription_feed)) {
+				                 queue_async_task(load_subscription_feed, NULL);
+			                 }
+		                 })
+		                 ->set_get_background_color([](const View &view) -> u32 {
+			                 if (is_async_task_running(load_subscription_feed)) {
+				                 return LIGHT0_BACK_COLOR;
+			                 }
+			                 return View::STANDARD_BACKGROUND(view);
+		                 }),
+		             (new RuleView(0, 0, 320, SMALL_MARGIN))->set_margin(0)->set_get_background_color([](const View &) {
+			             return DEFAULT_BACK_COLOR;
+		             }),
+		             local_feed_videos_view})
+		        ->set_draw_order({2, 1, 0});
+	} else {
+		local_feed_videos_view =
+		    (new ScrollView(0, 0, 320, 0))->set_views({local_feed_videos_list_view})->set_pull_to_refresh(true, []() {
+			    if (!is_async_task_running(load_subscription_feed)) {
+				    queue_async_task(load_subscription_feed, NULL);
+			    }
+		    });
+		feed_tab_view = local_feed_videos_view;
+	}
 
 	oauth_feed_videos_list_view = (new VerticalListView(0, 0, 320))
 	                                  ->set_margin(SMALL_MARGIN)
 	                                  ->enable_thumbnail_request_update(MAX_THUMBNAIL_LOAD_REQUEST, SceneType::HOME);
-	oauth_feed_videos_view = (new ScrollView(0, 0, 320, 0))
-	                             ->set_views({oauth_feed_videos_list_view, oauth_feed_videos_bottom_view})
-	                             ->set_pull_to_refresh(true, []() {
-		                             if (!is_async_task_running(load_oauth_subscription_feed)) {
-			                             queue_async_task(load_oauth_subscription_feed, NULL);
-		                             }
-	                             });
 
-	auto create_feed_tab = [](ScrollView *videos_view) { return videos_view; };
+	if (var_disable_pull_to_refresh) {
+		oauth_feed_videos_view =
+		    (new ScrollView(0, 0, 320, 0))->set_views({oauth_feed_videos_list_view, oauth_feed_videos_bottom_view});
+	} else {
+		oauth_feed_videos_view = (new ScrollView(0, 0, 320, 0))
+		                             ->set_views({oauth_feed_videos_list_view, oauth_feed_videos_bottom_view})
+		                             ->set_pull_to_refresh(true, []() {
+			                             if (!is_async_task_running(load_oauth_subscription_feed)) {
+				                             queue_async_task(load_oauth_subscription_feed, NULL);
+			                             }
+		                             });
+	}
 
 	if (OAuth::is_authenticated()) {
-		feed_tab_view =
-		    (new TabView(0, 0, 320, 0))
-		        ->set_views({create_feed_tab(oauth_feed_videos_view), create_feed_tab(local_feed_videos_view)})
-		        ->set_tab_texts<std::function<std::string()>>(
-		            {[]() { return LOCALIZED(YOUTUBE_CHANNELS); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
-		        ->set_lr_tab_switch_enabled(false);
-	} else {
-		feed_tab_view = create_feed_tab(local_feed_videos_view);
+		if (var_disable_pull_to_refresh) {
+			View *local_feed_tab = feed_tab_view;
+			View *oauth_feed_tab =
+			    (new VerticalListView(0, 0, 320))
+			        ->set_views({(new TextView(0, 0, 320, FEED_RELOAD_BUTTON_HEIGHT))
+			                         ->set_text((std::function<std::string()>)[]() {
+				                         auto res = LOCALIZED(RELOAD);
+				                         if (is_async_task_running(load_oauth_subscription_feed)) {
+					                         res += " ...";
+				                         }
+				                         return res;
+			                         })
+			                         ->set_text_offset(SMALL_MARGIN, -1)
+			                         ->set_on_view_released([](View &) {
+				                         if (!is_async_task_running(load_oauth_subscription_feed)) {
+					                         queue_async_task(load_oauth_subscription_feed, NULL);
+				                         }
+			                         })
+			                         ->set_get_background_color([](const View &view) -> u32 {
+				                         if (is_async_task_running(load_oauth_subscription_feed)) {
+					                         return LIGHT0_BACK_COLOR;
+				                         }
+				                         return View::STANDARD_BACKGROUND(view);
+			                         }),
+			                     (new RuleView(0, 0, 320, SMALL_MARGIN))
+			                         ->set_margin(0)
+			                         ->set_get_background_color([](const View &) { return DEFAULT_BACK_COLOR; }),
+			                     oauth_feed_videos_view})
+			        ->set_draw_order({2, 1, 0});
+			feed_tab_view =
+			    (new TabView(0, 0, 320, 0))
+			        ->set_views({oauth_feed_tab, local_feed_tab})
+			        ->set_tab_texts<std::function<std::string()>>(
+			            {[]() { return LOCALIZED(YOUTUBE_CHANNELS); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
+			        ->set_lr_tab_switch_enabled(false);
+		} else {
+			feed_tab_view =
+			    (new TabView(0, 0, 320, 0))
+			        ->set_views({oauth_feed_videos_view, local_feed_videos_view})
+			        ->set_tab_texts<std::function<std::string()>>(
+			            {[]() { return LOCALIZED(YOUTUBE_CHANNELS); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
+			        ->set_lr_tab_switch_enabled(false);
+		}
 	}
 	main_tab_view = (new TabView(0, 0, 320, CONTENT_Y_HIGH - TOP_HEIGHT))
 	                    ->set_views({home_tab_view, channels_tab_view, feed_tab_view})
@@ -228,6 +302,12 @@ void Home_rebuild_channels_tab(void) {
 		}
 		channels_tab_view = NULL;
 
+		oauth_channels_tab_view->set_pull_to_refresh(!var_disable_pull_to_refresh, []() {
+			if (!is_async_task_running(load_oauth_subscribed_channels)) {
+				queue_async_task(load_oauth_subscribed_channels, NULL);
+			}
+		});
+
 		if (OAuth::is_authenticated()) {
 			channels_tab_view =
 			    (new TabView(0, 0, 320, 0))
@@ -260,27 +340,139 @@ void Home_rebuild_feed_tab(void) {
 
 		TabView *old_tab = dynamic_cast<TabView *>(feed_tab_view);
 		if (old_tab) {
+			for (auto view : old_tab->views) {
+				VerticalListView *vlist = dynamic_cast<VerticalListView *>(view);
+				if (vlist) {
+					delete vlist;
+				}
+			}
 			old_tab->views.clear();
 			delete old_tab;
+		} else {
+			VerticalListView *old_list = dynamic_cast<VerticalListView *>(feed_tab_view);
+			if (old_list) {
+				delete old_list;
+			}
 		}
 		feed_tab_view = NULL;
 
-		auto create_feed_tab = [](ScrollView *videos_view) { return videos_view; };
+		if (var_disable_pull_to_refresh) {
+			local_feed_videos_view->set_pull_to_refresh(false, nullptr);
+			feed_tab_view =
+			    (new VerticalListView(0, 0, 320))
+			        ->set_views({(new TextView(0, 0, 320, FEED_RELOAD_BUTTON_HEIGHT))
+			                         ->set_text((std::function<std::string()>)[]() {
+				                         auto res = LOCALIZED(RELOAD);
+				                         if (is_async_task_running(load_subscription_feed)) {
+					                         res += " (" + std::to_string(feed_loading_progress) + "/" +
+					                                std::to_string(feed_loading_total) + ")";
+				                         }
+				                         return res;
+			                         })
+			                         ->set_text_offset(SMALL_MARGIN, -1)
+			                         ->set_on_view_released([](View &) {
+				                         if (!is_async_task_running(load_subscription_feed)) {
+					                         queue_async_task(load_subscription_feed, NULL);
+				                         }
+			                         })
+			                         ->set_get_background_color([](const View &view) -> u32 {
+				                         if (is_async_task_running(load_subscription_feed)) {
+					                         return LIGHT0_BACK_COLOR;
+				                         }
+				                         return View::STANDARD_BACKGROUND(view);
+			                         }),
+			                     (new RuleView(0, 0, 320, SMALL_MARGIN))
+			                         ->set_margin(0)
+			                         ->set_get_background_color([](const View &) { return DEFAULT_BACK_COLOR; }),
+			                     local_feed_videos_view})
+			        ->set_draw_order({2, 1, 0});
+		} else {
+			local_feed_videos_view->set_pull_to_refresh(true, []() {
+				if (!is_async_task_running(load_subscription_feed)) {
+					queue_async_task(load_subscription_feed, NULL);
+				}
+			});
+			feed_tab_view = local_feed_videos_view;
+		}
 
 		if (OAuth::is_authenticated()) {
-			feed_tab_view =
-			    (new TabView(0, 0, 320, 0))
-			        ->set_views({create_feed_tab(oauth_feed_videos_view), create_feed_tab(local_feed_videos_view)})
-			        ->set_tab_texts<std::function<std::string()>>(
-			            {[]() { return LOCALIZED(YOUTUBE_CHANNELS); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
-			        ->set_lr_tab_switch_enabled(false);
-		} else {
-			feed_tab_view = create_feed_tab(local_feed_videos_view);
+			if (var_disable_pull_to_refresh) {
+				oauth_feed_videos_view->set_pull_to_refresh(false, nullptr);
+				View *local_feed_tab = feed_tab_view;
+				View *oauth_feed_tab =
+				    (new VerticalListView(0, 0, 320))
+				        ->set_views({(new TextView(0, 0, 320, FEED_RELOAD_BUTTON_HEIGHT))
+				                         ->set_text((std::function<std::string()>)[]() {
+					                         auto res = LOCALIZED(RELOAD);
+					                         if (is_async_task_running(load_oauth_subscription_feed)) {
+						                         res += " ...";
+					                         }
+					                         return res;
+				                         })
+				                         ->set_text_offset(SMALL_MARGIN, -1)
+				                         ->set_on_view_released([](View &) {
+					                         if (!is_async_task_running(load_oauth_subscription_feed)) {
+						                         queue_async_task(load_oauth_subscription_feed, NULL);
+					                         }
+				                         })
+				                         ->set_get_background_color([](const View &view) -> u32 {
+					                         if (is_async_task_running(load_oauth_subscription_feed)) {
+						                         return LIGHT0_BACK_COLOR;
+					                         }
+					                         return View::STANDARD_BACKGROUND(view);
+				                         }),
+				                     (new RuleView(0, 0, 320, SMALL_MARGIN))
+				                         ->set_margin(0)
+				                         ->set_get_background_color([](const View &) { return DEFAULT_BACK_COLOR; }),
+				                     oauth_feed_videos_view})
+				        ->set_draw_order({2, 1, 0});
+				feed_tab_view =
+				    (new TabView(0, 0, 320, 0))
+				        ->set_views({oauth_feed_tab, local_feed_tab})
+				        ->set_tab_texts<std::function<std::string()>>(
+				            {[]() { return LOCALIZED(YOUTUBE_CHANNELS); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
+				        ->set_lr_tab_switch_enabled(false);
+			} else {
+				oauth_feed_videos_view->set_pull_to_refresh(true, []() {
+					if (!is_async_task_running(load_oauth_subscription_feed)) {
+						queue_async_task(load_oauth_subscription_feed, NULL);
+					}
+				});
+				feed_tab_view =
+				    (new TabView(0, 0, 320, 0))
+				        ->set_views({oauth_feed_videos_view, local_feed_videos_view})
+				        ->set_tab_texts<std::function<std::string()>>(
+				            {[]() { return LOCALIZED(YOUTUBE_CHANNELS); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
+				        ->set_lr_tab_switch_enabled(false);
+			}
 		}
 
 		main_views[2] = feed_tab_view;
 		main_tab_view->views = main_views;
 	}
+
+	resource_lock.unlock();
+	var_need_refresh = true;
+}
+
+void Home_update_pull_to_refresh(void) {
+	if (!already_init) {
+		return;
+	}
+
+	resource_lock.lock();
+
+	home_tab_view->set_pull_to_refresh(!var_disable_pull_to_refresh, []() {
+		if (!is_async_task_running(load_home_page)) {
+			queue_async_task(load_home_page, NULL);
+		}
+	});
+
+	oauth_channels_tab_view->set_pull_to_refresh(!var_disable_pull_to_refresh, []() {
+		if (!is_async_task_running(load_oauth_subscribed_channels)) {
+			queue_async_task(load_oauth_subscribed_channels, NULL);
+		}
+	});
 
 	resource_lock.unlock();
 	var_need_refresh = true;
@@ -541,7 +733,7 @@ static void load_subscription_feed(void *) {
 	resource_lock.lock();
 	if (exiting) { // app shut down while loading
 		resource_lock.unlock();
-		if (local_feed_videos_view) {
+		if (local_feed_videos_view && !var_disable_pull_to_refresh) {
 			local_feed_videos_view->finish_pull_refresh();
 		}
 		return;
@@ -551,7 +743,7 @@ static void load_subscription_feed(void *) {
 	local_feed_videos_list_view->recursive_delete_subviews();
 	local_feed_videos_list_view->views = new_feed_video_views;
 
-	if (local_feed_videos_view) {
+	if (local_feed_videos_view && !var_disable_pull_to_refresh) {
 		local_feed_videos_view->finish_pull_refresh();
 	}
 
@@ -561,7 +753,7 @@ static void load_subscription_feed(void *) {
 static void load_oauth_subscription_feed(void *) {
 	if (!OAuth::is_authenticated()) {
 		resource_lock.lock();
-		if (oauth_feed_videos_view) {
+		if (oauth_feed_videos_view && !var_disable_pull_to_refresh) {
 			oauth_feed_videos_view->finish_pull_refresh();
 		}
 		resource_lock.unlock();
@@ -580,6 +772,7 @@ static void load_oauth_subscription_feed(void *) {
 	RJson data = OAuth::fetch_browse_data("FEsubscriptions");
 	remove_cpu_limit(ADDITIONAL_CPU_LIMIT);
 
+	logger.info("home/oauth_feed", "truncate/view creation start");
 	std::vector<View *> new_oauth_feed_video_views;
 
 	if (data.is_valid()) {
@@ -688,11 +881,13 @@ static void load_oauth_subscription_feed(void *) {
 		oauth_feed_has_more = false;
 	}
 
+	logger.info("home/oauth_feed", "truncate/view creation end");
+
 	resource_lock.lock();
 
 	if (exiting) {
 		resource_lock.unlock();
-		if (oauth_feed_videos_view) {
+		if (oauth_feed_videos_view && !var_disable_pull_to_refresh) {
 			oauth_feed_videos_view->finish_pull_refresh();
 		}
 		return;
@@ -702,7 +897,7 @@ static void load_oauth_subscription_feed(void *) {
 	oauth_feed_videos_list_view->set_views(new_oauth_feed_video_views);
 	update_oauth_feed_bottom_view(false);
 
-	if (oauth_feed_videos_view) {
+	if (oauth_feed_videos_view && !var_disable_pull_to_refresh) {
 		oauth_feed_videos_view->finish_pull_refresh();
 	}
 
@@ -972,12 +1167,31 @@ void Home_draw(void) {
 
 		TabView *feed_tab_as_tabview = dynamic_cast<TabView *>(feed_tab_view);
 		if (feed_tab_as_tabview) {
-			local_feed_videos_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT - main_tab_view->tab_selector_height -
-			                                              feed_tab_as_tabview->tab_selector_height);
-			oauth_feed_videos_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT - main_tab_view->tab_selector_height -
-			                                              feed_tab_as_tabview->tab_selector_height);
+			if (var_disable_pull_to_refresh) {
+				local_feed_videos_view->update_y_range(
+				    0, CONTENT_Y_HIGH - TOP_HEIGHT - main_tab_view->tab_selector_height -
+				           feed_tab_as_tabview->tab_selector_height - FEED_RELOAD_BUTTON_HEIGHT - SMALL_MARGIN);
+				oauth_feed_videos_view->update_y_range(
+				    0, CONTENT_Y_HIGH - TOP_HEIGHT - main_tab_view->tab_selector_height -
+				           feed_tab_as_tabview->tab_selector_height - FEED_RELOAD_BUTTON_HEIGHT - SMALL_MARGIN);
+			} else {
+				local_feed_videos_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT -
+				                                              main_tab_view->tab_selector_height -
+				                                              feed_tab_as_tabview->tab_selector_height);
+				oauth_feed_videos_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT -
+				                                              main_tab_view->tab_selector_height -
+				                                              feed_tab_as_tabview->tab_selector_height);
+			}
 		} else {
-			local_feed_videos_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT - main_tab_view->tab_selector_height);
+			VerticalListView *feed_list = dynamic_cast<VerticalListView *>(feed_tab_view);
+			if (feed_list && var_disable_pull_to_refresh) {
+				local_feed_videos_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT -
+				                                              main_tab_view->tab_selector_height -
+				                                              FEED_RELOAD_BUTTON_HEIGHT - SMALL_MARGIN);
+			} else {
+				local_feed_videos_view->update_y_range(0, CONTENT_Y_HIGH - TOP_HEIGHT -
+				                                              main_tab_view->tab_selector_height);
+			}
 		}
 
 		FixedHeightView *feed_fixed = dynamic_cast<FixedHeightView *>(feed_tab_view);

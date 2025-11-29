@@ -5,6 +5,7 @@ bool var_need_refresh = true;
 bool var_allow_send_app_info = false;
 bool var_hide_pointer = false;
 bool var_night_mode = false;
+bool var_disable_pull_to_refresh = false;
 bool var_eco_mode = true;
 bool var_debug_mode = false;
 bool var_history_enabled = true;

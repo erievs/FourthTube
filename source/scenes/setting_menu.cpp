@@ -7,6 +7,7 @@
 #include "data_io/history.hpp"
 #include "util/misc_tasks.hpp"
 #include "scenes/setting_menu.hpp"
+#include "scenes/home.hpp"
 #include "scenes/video_player.hpp"
 #include "ui/overlay.hpp"
 #include "ui/ui.hpp"
@@ -538,6 +539,24 @@ void Sem_init(void) {
 							if (var_night_mode != view.selected_button) {
 								var_night_mode = view.selected_button;
 								misc_tasks_request(TASK_SAVE_SETTINGS);
+							}
+						}),
+					// Disable pull to refresh
+					(new SelectorView(0, 0, 320, 35, true))
+						->set_texts({
+							(std::function<std::string ()>) []() { return LOCALIZED(OFF); },
+							(std::function<std::string ()>) []() { return LOCALIZED(ON); }
+						}, var_disable_pull_to_refresh)
+						->set_title([](const SelectorView &) { return LOCALIZED(DISABLE_PULL_TO_REFRESH); })
+						->set_info([](const SelectorView &) { return LOCALIZED(INFO_DISABLE_PULL_TO_REFRESH); })
+						->set_popup_height(60)
+						->set_on_change([](const SelectorView &view) {
+							if (var_disable_pull_to_refresh != view.selected_button) {
+								var_disable_pull_to_refresh = view.selected_button;
+								misc_tasks_request(TASK_SAVE_SETTINGS);
+								Home_rebuild_feed_tab();
+								Home_rebuild_channels_tab();
+								Home_update_pull_to_refresh();
 							}
 						}),
 					// Scroll speed 0

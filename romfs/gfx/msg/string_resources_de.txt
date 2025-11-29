@@ -111,6 +111,7 @@
 <SHOW_FULL_DISLIKE>Genaue Anzahl der Dislikes anzeigen</SHOW_FULL_DISLIKE>
 <HIDE_POINTER>Verstecke den Zeiger</HIDE_POINTER>
 <DARK_THEME>Dunkel Modus</DARK_THEME>
+<DISABLE_PULL_TO_REFRESH>Disable pull-to-refresh</DISABLE_PULL_TO_REFRESH>
 <AUTOPLAY>Autoplay</AUTOPLAY>
 <LOOP>Wiederholen</LOOP>
 <ONLY_IN_PLAYLIST>Nur Playlists</ONLY_IN_PLAYLIST>
@@ -127,6 +128,7 @@
 <PLAYER_RESPONSE>Zu verwendende Anwendungsdaten</PLAYER_RESPONSE>
 -----DeepL translate-----
 
+<INFO_DISABLE_PULL_TO_REFRESH>Disables pull-to-refresh in all tabs.\nWhen enabled, shows a reload button\nin the New tab instead.</INFO_DISABLE_PULL_TO_REFRESH>
 <INFO_ECO_MODE>Saves battery by reducing\nscreen update frequency.\nWhen enabled, the screen is\nredrawn only when content changes.</INFO_ECO_MODE>
 <INFO_PLAYER_RESPONSE>Change the spoofed client.\nAndroid VR is used when logged in,\nignoring this setting.</INFO_PLAYER_RESPONSE>
 <INFO_OAUTH>Accesses YouTube using\nAndroid VR client.\nAutomatically falls back to\nunauthenticated Android client\nif videos cannot be played,\nsuch as kids videos.</INFO_OAUTH>

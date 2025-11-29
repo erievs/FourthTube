@@ -111,6 +111,7 @@
 <SHOW_FULL_DISLIKE>完全な低評価/高評価を表示</SHOW_FULL_DISLIKE>
 <HIDE_POINTER>ポインターを非表示</HIDE_POINTER>
 <DARK_THEME>ダークモード</DARK_THEME>
+<DISABLE_PULL_TO_REFRESH>プルダウン更新を無効化</DISABLE_PULL_TO_REFRESH>
 <AUTOPLAY>自動再生</AUTOPLAY>
 <LOOP>ループ再生</LOOP>
 <ONLY_IN_PLAYLIST>リスト中でのみ</ONLY_IN_PLAYLIST>
@@ -123,6 +124,7 @@
 <RESTART_TO_APPLY>適用にはアプリの再起動が必要です</RESTART_TO_APPLY>
 <VIDEO_SHOW_DEBUG_INFO>動画プレーヤーにデバッグ情報を表示</VIDEO_SHOW_DEBUG_INFO>
 <PLAYER_RESPONSE>使用するアプリデータ</PLAYER_RESPONSE>
+<INFO_DISABLE_PULL_TO_REFRESH>全てのタブでプルダウン更新を無効化します。\n有効にすると、新着タブではリロードボタンが\n表示され、ボタンをタップして\n新着動画を更新できます。</INFO_DISABLE_PULL_TO_REFRESH>
 <INFO_ECO_MODE>画面の更新頻度を下げて\nバッテリーを節約します。\nオンにすると画面が変化した時のみ\n再描画されるようになります。</INFO_ECO_MODE>
 <INFO_PLAYER_RESPONSE>偽装するクライアントを変更します。\nログイン時はAndroid VRが使用され、\nこの設定は無視されます。</INFO_PLAYER_RESPONSE>
 <INFO_OAUTH>Android VRクライアントを使用して\nYouTubeにアクセスします。\n子供向け動画など、\n動画が再生できなかった場合は\n自動的に未認証のAndroidクライアントに\nフォールバックします。</INFO_OAUTH>
