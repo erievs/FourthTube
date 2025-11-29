@@ -59,6 +59,8 @@ static bool parse_searched_item(RJson content, std::vector<YouTubeSuccinctItem> 
 		debug_warning("Skipped reelShelfRenderer");
 	} else if (content.has_key("showingResultsForRenderer")) {
 		debug_warning("Skipped showingResultsForRenderer");
+	} else if (content.has_key("shortsLockupViewModel")) {
+		debug_warning("Skipped shortsLockupViewModel");
 	} else {
 		debug_warning("Error: Unexpected content structure");
 		success = false;
