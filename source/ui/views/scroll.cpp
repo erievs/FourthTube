@@ -30,6 +30,16 @@ void ScrollView::update_scroller(Hid_info key) {
 	if (inertia) {
 		var_need_refresh = true;
 	}
+
+	if (pull_to_refresh_enabled && pull_refresh_loading) {
+		pull_refresh_animation_frame++;
+		pull_refresh_rotation += 10.0f;
+		if (pull_refresh_rotation >= 360.0f) {
+			pull_refresh_rotation -= 360.0f;
+		}
+		var_need_refresh = true;
+	}
+
 	if (pull_to_refresh_enabled && offset < 0) {
 		float consistent_pull_distance = pull_refresh_threshold * 0.8f;
 		float trigger_threshold = consistent_pull_distance * 0.85f;
@@ -50,13 +60,7 @@ void ScrollView::update_scroller(Hid_info key) {
 			}
 		}
 
-		if (pull_refresh_loading) {
-			pull_refresh_animation_frame++;
-			pull_refresh_rotation += 10.0f;
-			if (pull_refresh_rotation >= 360.0f) {
-				pull_refresh_rotation -= 360.0f;
-			}
-		} else if (offset < 0) {
+		if (!pull_refresh_loading && offset < 0) {
 			pull_refresh_rotation = (-offset / trigger_threshold) * 180.0f;
 		}
 
