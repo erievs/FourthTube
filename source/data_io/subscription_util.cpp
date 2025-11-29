@@ -165,8 +165,26 @@ std::vector<SubscriptionChannel> get_valid_subscribed_channels() {
 std::vector<SubscriptionChannel> get_oauth_subscribed_channels() {
 	std::vector<SubscriptionChannel> result;
 
+	// Wait for internet connection
+	u8 wifi_state = *(u8 *)0x1FF81067;
+	int wifi_tries = 0;
+	while (wifi_state != 2) {
+		wifi_tries++;
+		if (wifi_tries > 20) {
+			logger.error("oauth-subsc", "no internet connection");
+			return result;
+		}
+		logger.info("oauth-subsc", "waiting for internet connection...");
+		usleep(1000000);
+		wifi_state = *(u8 *)0x1FF81067;
+		if (wifi_state == 2) {
+			usleep(500000);
+		}
+	}
+
 	RJson data = OAuth::fetch_browse_data("FEchannels");
 	if (!data.is_valid()) {
+		logger.error("oauth-subsc", "fetch failed");
 		return result;
 	}
 
