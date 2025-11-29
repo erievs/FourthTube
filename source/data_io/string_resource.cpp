@@ -17,10 +17,10 @@ std::string get_string_resource(std::string id) {
 Result_with_string load_string_resources(std::string lang) {
 	Result_with_string result;
 
-	static char buffer[0x2001];
+	static char buffer[0x4001];
 	memset(buffer, 0, sizeof(buffer));
 	u32 read_size;
-	result = Path("romfs:/gfx/msg/string_resources_" + lang + ".txt").read_file((u8 *)buffer, 0x2000, read_size);
+	result = Path("romfs:/gfx/msg/string_resources_" + lang + ".txt").read_file((u8 *)buffer, 0x4000, read_size);
 	if (result.code != 0) {
 		result.code = -1;
 		result.error_description = "Failed to open the string resource file";
