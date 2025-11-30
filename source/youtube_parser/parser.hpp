@@ -200,6 +200,10 @@ struct YouTubeChannelDetail {
 	std::string videos_continue_token;
 	std::string streams_continue_token;
 	std::string shorts_continue_token;
+	std::string video_sort_token_newest;
+	std::string video_sort_token_popular;
+	std::string video_sort_token_oldest;
+	int current_video_sort_type = 0; // 0: newest, 1: popular, 2: oldest
 	std::string playlist_tab_browse_id;
 	std::string playlist_tab_params;
 
