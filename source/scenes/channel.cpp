@@ -482,6 +482,19 @@ static void load_channel(void *) {
 		video_load_more_view->set_is_visible(false);
 	}
 
+	auto video_tab_view = dynamic_cast<VerticalListView *>(tab_view->views[0]);
+	if (!channel_info.video_sort_token_newest.empty() || !channel_info.video_sort_token_popular.empty() || !channel_info.video_sort_token_oldest.empty()) {
+		dynamic_cast<HorizontalListView *>(video_tab_view->views[0])->update_y_range(0, MIDDLE_FONT_INTERVAL);
+		video_tab_view->views[0]->set_is_visible(true);
+		dynamic_cast<RuleView *>(video_tab_view->views[1])->update_y_range(0, 2);
+		video_tab_view->views[1]->set_is_visible(true);
+	} else {
+		dynamic_cast<HorizontalListView *>(video_tab_view->views[0])->update_y_range(0, 0);
+		video_tab_view->views[0]->set_is_visible(false);
+		dynamic_cast<RuleView *>(video_tab_view->views[1])->update_y_range(0, 0);
+		video_tab_view->views[1]->set_is_visible(false);
+	}
+
 	// streams list
 	stream_list_view->recursive_delete_subviews();
 	if (result.streams.size() > 0) {
