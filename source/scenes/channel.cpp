@@ -228,6 +228,10 @@ void Channel_resume(std::string arg) {
 	if (arg != "" && arg != cur_channel_url) {
 		send_load_request(arg);
 		tab_view->selected_tab = 0;
+	} else {
+		if (video_sort_selector) {
+			video_sort_selector->selected_button = cur_video_sort_type;
+		}
 	}
 	overlay_menu_on_resume();
 	main_view->on_resume();
@@ -483,7 +487,8 @@ static void load_channel(void *) {
 	}
 
 	auto video_tab_view = dynamic_cast<VerticalListView *>(tab_view->views[0]);
-	if (!channel_info.video_sort_token_newest.empty() || !channel_info.video_sort_token_popular.empty() || !channel_info.video_sort_token_oldest.empty()) {
+	if (!channel_info.video_sort_token_newest.empty() || !channel_info.video_sort_token_popular.empty() ||
+	    !channel_info.video_sort_token_oldest.empty()) {
 		dynamic_cast<HorizontalListView *>(video_tab_view->views[0])->update_y_range(0, MIDDLE_FONT_INTERVAL);
 		video_tab_view->views[0]->set_is_visible(true);
 		dynamic_cast<RuleView *>(video_tab_view->views[1])->update_y_range(0, 2);
@@ -1038,6 +1043,8 @@ void Channel_draw(void) {
 				video_list_view->views.clear();
 				channel_info.videos.clear();
 				channel_info.videos_continue_token = sort_token;
+				channel_info.current_video_sort_type = video_sort_request;
+				channel_info_cache[cur_channel_url] = channel_info;
 
 				if (!is_async_task_running(load_channel_more)) {
 					queue_async_task(load_channel_more, NULL);
