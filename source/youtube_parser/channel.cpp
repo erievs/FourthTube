@@ -51,11 +51,11 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 		bool is_shorts_tab = ends_with(tab_url, "/shorts");
 
 		if (tab["tabRenderer"]["content"].has_key("richGridRenderer")) {
-			if (is_videos_tab) {
-				auto rich_grid = tab["tabRenderer"]["content"]["richGridRenderer"];
-				if (rich_grid.has_key("header") && rich_grid["header"].has_key("feedFilterChipBarRenderer")) {
-					auto chips = rich_grid["header"]["feedFilterChipBarRenderer"]["contents"].array_items();
-					if (chips.size() >= 3) {
+			auto rich_grid = tab["tabRenderer"]["content"]["richGridRenderer"];
+			if (rich_grid.has_key("header") && rich_grid["header"].has_key("feedFilterChipBarRenderer")) {
+				auto chips = rich_grid["header"]["feedFilterChipBarRenderer"]["contents"].array_items();
+				if (chips.size() >= 3) {
+					if (is_videos_tab) {
 						res.video_sort_token_newest =
 						    chips[0]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
 						        .string_value();
@@ -70,6 +70,24 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 						for (size_t i = 0; i < chips.size() && i < 3; i++) {
 							if (chips[i]["chipCloudChipRenderer"]["isSelected"].bool_value()) {
 								res.current_video_sort_type = i;
+								break;
+							}
+						}
+					} else if (is_shorts_tab) {
+						res.shorts_sort_token_newest =
+						    chips[0]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+						res.shorts_sort_token_popular =
+						    chips[1]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+						res.shorts_sort_token_oldest =
+						    chips[2]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+
+						// Detect which sort is currently selected
+						for (size_t i = 0; i < chips.size() && i < 3; i++) {
+							if (chips[i]["chipCloudChipRenderer"]["isSelected"].bool_value()) {
+								res.current_shorts_sort_type = i;
 								break;
 							}
 						}
@@ -352,7 +370,8 @@ YouTubeChannelDetail youtube_load_channel_shorts_page(std::string url_or_id) {
 				return res;
 			}
 			Document json_root;
-			parse_channel_data(get_initial_data(json_root, html), res);
+			auto initial_data = get_initial_data(json_root, html);
+			parse_channel_data(initial_data, res);
 			res.shorts_loaded = true;
 		}
 	} else {
@@ -515,9 +534,15 @@ void YouTubeChannelDetail::load_more_shorts() {
 	    [&]() { return http_post_json(get_innertube_api_url("browse"), post_content); },
 	    [&](Document &, RJson yt_result) {
 		    shorts_continue_token = "";
-
 		    for (auto i : yt_result["onResponseReceivedActions"].array_items()) {
-			    for (auto j : i["appendContinuationItemsAction"]["continuationItems"].array_items()) {
+			    RJson continuation_items;
+			    if (i.has_key("appendContinuationItemsAction")) {
+				    continuation_items = i["appendContinuationItemsAction"]["continuationItems"];
+			    } else if (i.has_key("reloadContinuationItemsCommand")) {
+				    continuation_items = i["reloadContinuationItemsCommand"]["continuationItems"];
+			    }
+
+			    for (auto j : continuation_items.array_items()) {
 				    if (j["richItemRenderer"]["content"].has_key("shortsLockupViewModel")) {
 					    auto shorts_data = j["richItemRenderer"]["content"]["shortsLockupViewModel"];
 					    YouTubeVideoSuccinct short_video;

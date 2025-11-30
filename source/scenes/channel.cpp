@@ -41,12 +41,15 @@ int VIDEO_LIST_Y_HIGH = 240;
 
 int cur_video_sort_type = 0; // 0: newest, 1: popular, 2: oldest
 int video_sort_request = -1;
+int cur_shorts_sort_type = 0; // 0: newest, 1: popular, 2: oldest
+int shorts_sort_request = -1;
 
 ScrollView *main_view = new ScrollView(0, 0, 320, VIDEO_LIST_Y_HIGH);
 ImageView *banner_view;
 ChannelView *channel_view;
 Tab2View *tab_view;
 SelectorView *video_sort_selector;
+SelectorView *shorts_sort_selector;
 // anonymous VerticalListView
 VerticalListView *video_list_view;
 TextView *video_load_more_view;
@@ -100,6 +103,15 @@ void Channel_init(void) {
 	                          ->set_on_change([](const SelectorView &view) {
 		                          video_sort_request = cur_video_sort_type = view.selected_button;
 	                          });
+
+	shorts_sort_selector = (new SelectorView(0, 0, 320, MIDDLE_FONT_INTERVAL, false))
+	                           ->set_texts({(std::function<std::string()>)[]() { return LOCALIZED(LATEST); },
+	                                        (std::function<std::string()>)[]() { return LOCALIZED(POPULAR); },
+	                                        (std::function<std::string()>)[]() { return LOCALIZED(OLDEST); }},
+	                                       cur_shorts_sort_type)
+	                           ->set_on_change([](const SelectorView &view) {
+		                           shorts_sort_request = cur_shorts_sort_type = view.selected_button;
+	                           });
 
 	video_list_view = (new VerticalListView(0, 0, 320))
 	                      ->set_margin(SMALL_MARGIN)
@@ -176,24 +188,28 @@ void Channel_init(void) {
 		    }
 	    });
 	info_view = (new VerticalListView(0, 0, 320));
-	tab_view = (new Tab2View(0, 0, 320))
-	               ->set_tab_font_size(0.4)
-	               ->set_tab_texts<std::function<std::string()>>(
-	                   {[]() { return LOCALIZED(VIDEOS); }, []() { return LOCALIZED(STREAMS); },
-	                    []() { return LOCALIZED(SHORTS); }, []() { return LOCALIZED(PLAYLISTS); },
-	                    []() { return LOCALIZED(COMMUNITY); }, []() { return LOCALIZED(INFO); }})
-	               ->set_views(
-	                   {(new VerticalListView(0, 0, 320))
-	                        ->set_views(
-	                            {(new HorizontalListView(0, 0, MIDDLE_FONT_INTERVAL))->set_views({video_sort_selector}),
-	                             (new RuleView(0, 0, 320, 2)), video_list_view, video_load_more_view}),
-	                    (new VerticalListView(0, 0, 320))->set_views({stream_list_view, stream_load_more_view}),
-	                    (new VerticalListView(0, 0, 320))->set_views({shorts_list_view, shorts_load_more_view}),
-	                    (new EmptyView(0, 0, 320, 0)),
-	                    (new VerticalListView(0, 0, 320))
-	                        ->set_views({(new EmptyView(0, 0, 320, SMALL_MARGIN)), community_post_list_view,
-	                                     community_post_load_more_view}),
-	                    info_view});
+	tab_view =
+	    (new Tab2View(0, 0, 320))
+	        ->set_tab_font_size(0.4)
+	        ->set_tab_texts<std::function<std::string()>>(
+	            {[]() { return LOCALIZED(VIDEOS); }, []() { return LOCALIZED(STREAMS); },
+	             []() { return LOCALIZED(SHORTS); }, []() { return LOCALIZED(PLAYLISTS); },
+	             []() { return LOCALIZED(COMMUNITY); }, []() { return LOCALIZED(INFO); }})
+	        ->set_views(
+	            {(new VerticalListView(0, 0, 320))
+	                 ->set_views(
+	                     {(new HorizontalListView(0, 0, MIDDLE_FONT_INTERVAL))->set_views({video_sort_selector}),
+	                      (new RuleView(0, 0, 320, 2)), video_list_view, video_load_more_view}),
+	             (new VerticalListView(0, 0, 320))->set_views({stream_list_view, stream_load_more_view}),
+	             (new VerticalListView(0, 0, 320))
+	                 ->set_views(
+	                     {(new HorizontalListView(0, 0, MIDDLE_FONT_INTERVAL))->set_views({shorts_sort_selector}),
+	                      (new RuleView(0, 0, 320, 2)), shorts_list_view, shorts_load_more_view}),
+	             (new EmptyView(0, 0, 320, 0)),
+	             (new VerticalListView(0, 0, 320))
+	                 ->set_views({(new EmptyView(0, 0, 320, SMALL_MARGIN)), community_post_list_view,
+	                              community_post_load_more_view}),
+	             info_view});
 	Channel_resume("");
 	already_init = true;
 }
@@ -231,6 +247,9 @@ void Channel_resume(std::string arg) {
 	} else {
 		if (video_sort_selector) {
 			video_sort_selector->selected_button = cur_video_sort_type;
+		}
+		if (shorts_sort_selector) {
+			shorts_sort_selector->selected_button = cur_shorts_sort_type;
 		}
 	}
 	overlay_menu_on_resume();
@@ -443,6 +462,10 @@ static void load_channel(void *) {
 	if (video_sort_selector) {
 		video_sort_selector->selected_button = cur_video_sort_type;
 	}
+	cur_shorts_sort_type = channel_info.current_shorts_sort_type;
+	if (shorts_sort_selector) {
+		shorts_sort_selector->selected_button = cur_shorts_sort_type;
+	}
 
 	// banner
 	thumbnail_cancel_request(banner_view->handle);
@@ -552,6 +575,20 @@ static void load_channel(void *) {
 		shorts_load_more_view->set_text((std::function<std::string()>)[]() {
 			return channel_info.error != "" ? channel_info.error : LOCALIZED(LOADING);
 		});
+	}
+
+	auto shorts_tab_view = dynamic_cast<VerticalListView *>(tab_view->views[2]);
+	if (!channel_info.shorts_sort_token_newest.empty() || !channel_info.shorts_sort_token_popular.empty() ||
+	    !channel_info.shorts_sort_token_oldest.empty()) {
+		dynamic_cast<HorizontalListView *>(shorts_tab_view->views[0])->update_y_range(0, MIDDLE_FONT_INTERVAL);
+		shorts_tab_view->views[0]->set_is_visible(true);
+		dynamic_cast<RuleView *>(shorts_tab_view->views[1])->update_y_range(0, 2);
+		shorts_tab_view->views[1]->set_is_visible(true);
+	} else {
+		dynamic_cast<HorizontalListView *>(shorts_tab_view->views[0])->update_y_range(0, 0);
+		shorts_tab_view->views[0]->set_is_visible(false);
+		dynamic_cast<RuleView *>(shorts_tab_view->views[1])->update_y_range(0, 0);
+		shorts_tab_view->views[1]->set_is_visible(false);
 	}
 
 	// playlist list
@@ -737,9 +774,17 @@ static void load_channel_shorts(void *) {
 	channel_info.shorts = shorts_result.shorts;
 	channel_info.shorts_continue_token = shorts_result.shorts_continue_token;
 	channel_info.shorts_loaded = true;
-	channel_info.error = shorts_result.error;
+	channel_info.shorts_sort_token_newest = shorts_result.shorts_sort_token_newest;
+	channel_info.shorts_sort_token_popular = shorts_result.shorts_sort_token_popular;
+	channel_info.shorts_sort_token_oldest = shorts_result.shorts_sort_token_oldest;
+	channel_info.current_shorts_sort_type = shorts_result.current_shorts_sort_type;
 	if (shorts_result.error == "") {
 		channel_info_cache[channel_info.url_original] = channel_info;
+	}
+
+	cur_shorts_sort_type = channel_info.current_shorts_sort_type;
+	if (shorts_sort_selector) {
+		shorts_sort_selector->selected_button = cur_shorts_sort_type;
 	}
 
 	shorts_list_view->views.insert(shorts_list_view->views.end(), shorts_views.begin(), shorts_views.end());
@@ -754,15 +799,25 @@ static void load_channel_shorts(void *) {
 		shorts_load_more_view->set_is_visible(false);
 	}
 
+	auto shorts_tab_view = dynamic_cast<VerticalListView *>(tab_view->views[2]);
+	if (!channel_info.shorts_sort_token_newest.empty() || !channel_info.shorts_sort_token_popular.empty() ||
+	    !channel_info.shorts_sort_token_oldest.empty()) {
+		dynamic_cast<HorizontalListView *>(shorts_tab_view->views[0])->update_y_range(0, MIDDLE_FONT_INTERVAL);
+		shorts_tab_view->views[0]->set_is_visible(true);
+		dynamic_cast<RuleView *>(shorts_tab_view->views[1])->update_y_range(0, 2);
+		shorts_tab_view->views[1]->set_is_visible(true);
+	} else {
+		dynamic_cast<HorizontalListView *>(shorts_tab_view->views[0])->update_y_range(0, 0);
+		shorts_tab_view->views[0]->set_is_visible(false);
+		dynamic_cast<RuleView *>(shorts_tab_view->views[1])->update_y_range(0, 0);
+		shorts_tab_view->views[1]->set_is_visible(false);
+	}
+
 	var_need_refresh = true;
 	resource_lock.unlock();
 }
 
 static void load_channel_shorts_more(void *) {
-	if (!shorts_list_view || !shorts_load_more_view) {
-		return;
-	}
-
 	auto new_result = channel_info;
 	new_result.load_more_shorts();
 
@@ -1052,6 +1107,32 @@ void Channel_draw(void) {
 			}
 
 			video_sort_request = -1;
+		}
+
+		if (shorts_sort_request != -1 && tab_view && tab_view->selected_tab == 2) {
+			std::string sort_token;
+			if (shorts_sort_request == 0) {
+				sort_token = channel_info.shorts_sort_token_newest;
+			} else if (shorts_sort_request == 1) {
+				sort_token = channel_info.shorts_sort_token_popular;
+			} else if (shorts_sort_request == 2) {
+				sort_token = channel_info.shorts_sort_token_oldest;
+			}
+
+			if (!sort_token.empty()) {
+				shorts_list_view->recursive_delete_subviews();
+				shorts_list_view->views.clear();
+				channel_info.shorts.clear();
+				channel_info.shorts_continue_token = sort_token;
+				channel_info.current_shorts_sort_type = shorts_sort_request;
+				channel_info_cache[cur_channel_url] = channel_info;
+
+				if (!is_async_task_running(load_channel_shorts_more)) {
+					queue_async_task(load_channel_shorts_more, NULL);
+				}
+			}
+
+			shorts_sort_request = -1;
 		}
 
 		if (key.p_b) {
