@@ -427,9 +427,21 @@ Result_with_string NetworkDecoderFilterData::init(AVCodecContext *audio_context)
 			char *head = option_buffer;
 			for (int i = 0; i < 18; i++) {
 				if (i) {
-					*head++ = ':';
+					if (head < option_buffer + 256 - 1) {
+						*head++ = ':';
+					}
 				}
-				head += snprintf(head, option_buffer + 256 - head, "%db=%.3f", i + 1, equalizer_values[i]);
+				size_t remaining = option_buffer + 256 - head;
+				int n = snprintf(head, remaining, "%db=%.3f", i + 1, equalizer_values[i]);
+				// If error or output truncated, stop writing
+				if (n < 0 || (size_t)n >= remaining) {
+					// Make sure buffer is null terminated
+					if (option_buffer[255] != '\0') {
+						option_buffer[255] = '\0';
+					}
+					break;
+				}
+				head += n;
 			}
 			ffmpeg_result = avfilter_graph_create_filter(&superequalizer_filter, asuperequalizer, NULL, option_buffer,
 			                                             NULL, audio_filter_graph);
