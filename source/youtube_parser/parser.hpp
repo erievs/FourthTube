@@ -186,6 +186,7 @@ struct YouTubeChannelDetail {
 	std::string id;
 	std::string error;
 	std::string name;
+	std::string handle;
 	std::string url;
 	std::string url_original;
 	std::string icon_url;

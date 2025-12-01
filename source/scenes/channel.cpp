@@ -480,6 +480,8 @@ static void load_channel(void *) {
 	// main channel view
 	thumbnail_cancel_request(channel_view->icon_handle);
 	channel_view->set_name(channel_info.name)
+	    ->set_handle(channel_info.handle)
+	    ->set_subscriber_count(channel_info.subscriber_count_str)
 	    ->set_on_subscribe_button_released([](const ChannelView &view) {
 		    bool cur_subscribed = subscription_is_subscribed(channel_info.id);
 		    if (cur_subscribed) {
