@@ -23,6 +23,15 @@ class ScrollView : public FixedSizeView {
 	bool grabbed = false;
 	bool scrolling = false;
 
+	// Pull to refresh
+	bool pull_to_refresh_enabled = false;
+	bool pull_refresh_triggered = false;
+	bool pull_refresh_loading = false;
+	float pull_refresh_threshold = 40.0f;
+	float pull_refresh_rotation = 0.0f;
+	int pull_refresh_animation_frame = 0;
+	std::function<void()> on_pull_refresh = nullptr;
+
   public:
 	std::vector<View *> views;
 	double margin = 0.0;
@@ -70,6 +79,12 @@ class ScrollView : public FixedSizeView {
 	}
 	ScrollView *set_margin(double margin) {
 		this->margin = margin;
+		return this;
+	}
+	ScrollView *set_pull_to_refresh(bool enabled, std::function<void()> callback = nullptr, float threshold = 60.0f) {
+		this->pull_to_refresh_enabled = enabled;
+		this->on_pull_refresh = callback;
+		this->pull_refresh_threshold = threshold;
 		return this;
 	}
 
@@ -123,5 +138,12 @@ class ScrollView : public FixedSizeView {
 	void scroll(float amount) {
 		float scroll_max = std::max<float>(0, content_height - (y1 - y0));
 		offset = std::max(0.0f, std::min<float>(scroll_max, offset + amount));
+	}
+	bool is_pull_refresh_triggered() const { return pull_refresh_triggered; }
+	void reset_pull_refresh() { pull_refresh_triggered = false; }
+	void finish_pull_refresh() {
+		pull_refresh_loading = false;
+		pull_refresh_triggered = false;
+		pull_refresh_rotation = 0.0f;
 	}
 };

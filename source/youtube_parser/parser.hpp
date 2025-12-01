@@ -67,6 +67,7 @@ struct YouTubeVideoDetail {
 	std::string title;
 	std::string description;
 	YouTubeChannelSuccinct author;
+	bool metadata_from_android_vr = false;
 	std::string id;
 	std::string succinct_thumbnail_url;
 	std::string audio_stream_url;
@@ -199,6 +200,14 @@ struct YouTubeChannelDetail {
 	std::string videos_continue_token;
 	std::string streams_continue_token;
 	std::string shorts_continue_token;
+	std::string video_sort_token_newest;
+	std::string video_sort_token_popular;
+	std::string video_sort_token_oldest;
+	int current_video_sort_type = 0; // 0: newest, 1: popular, 2: oldest
+	std::string shorts_sort_token_newest;
+	std::string shorts_sort_token_popular;
+	std::string shorts_sort_token_oldest;
+	int current_shorts_sort_type = 0; // 0: newest, 1: popular, 2: oldest
 	std::string playlist_tab_browse_id;
 	std::string playlist_tab_params;
 

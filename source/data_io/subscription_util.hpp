@@ -17,3 +17,4 @@ bool subscription_is_subscribed(const std::string &id);
 void subscription_subscribe(const SubscriptionChannel &channel);
 void subscription_unsubscribe(const std::string &id);
 std::vector<SubscriptionChannel> get_valid_subscribed_channels();
+std::vector<SubscriptionChannel> get_oauth_subscribed_channels();

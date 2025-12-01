@@ -61,6 +61,7 @@ void load_settings() {
 	var_full_dislike_like_count = load_int("full_dislike_like_count", 0);
 	var_hide_pointer = load_int("hide_pointer", 0);
 	var_night_mode = load_int("dark_theme", 0);
+	var_disable_pull_to_refresh = load_int("disable_pull_to_refresh", 0);
 	var_community_image_size =
 	    std::min(COMMUNITY_IMAGE_SIZE_MAX,
 	             std::max(COMMUNITY_IMAGE_SIZE_MIN, load_int("community_image_size", COMMUNITY_IMAGE_SIZE_DEFAULT)));
@@ -76,7 +77,8 @@ void load_settings() {
 	var_dpad_scroll_speed1 = std::max(var_dpad_scroll_speed0, std::min(12.0, load_double("dpad_scroll_speed1", 9.0)));
 	var_dpad_scroll_speed1_threshold = std::max(0.3, std::min(5.0, load_double("dpad_scroll_speed1_threshold", 2.0)));
 	// For old ThirdTube and FourthTube <32 config files that used the wrong spelling of "threshold"
-	var_dpad_scroll_speed1_threshold_legacy = std::max(0.3, std::min(5.0, load_double("dpad_scroll_speed1_threashold", 2.0)));
+	var_dpad_scroll_speed1_threshold_legacy =
+	    std::max(0.3, std::min(5.0, load_double("dpad_scroll_speed1_threashold", 2.0)));
 	if (var_dpad_scroll_speed1_threshold_legacy != DPAD_SCROLL_THRESHOLD_DEFAULT &&
 	    var_dpad_scroll_speed1_threshold == DPAD_SCROLL_THRESHOLD_DEFAULT) {
 		var_dpad_scroll_speed1_threshold = var_dpad_scroll_speed1_threshold_legacy;
@@ -109,6 +111,7 @@ void save_settings() {
 	add_int("full_dislike_like_count", var_full_dislike_like_count);
 	add_int("hide_pointer", var_hide_pointer);
 	add_int("dark_theme", var_night_mode);
+	add_int("disable_pull_to_refresh", var_disable_pull_to_refresh);
 	add_int("community_image_size", var_community_image_size);
 	add_int("autoplay_level", var_autoplay_level);
 	add_int("loop_mode", var_loop_mode);

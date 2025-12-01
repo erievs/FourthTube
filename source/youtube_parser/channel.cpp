@@ -44,16 +44,62 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 
 	for (auto tab : data["contents"]["singleColumnBrowseResultsRenderer"]["tabs"].array_items()) {
 		std::string tab_url =
-			tab["tabRenderer"]["endpoint"]["commandMetadata"]["webCommandMetadata"]["url"].string_value();
+		    tab["tabRenderer"]["endpoint"]["commandMetadata"]["webCommandMetadata"]["url"].string_value();
 
 		bool is_streams_tab = ends_with(tab_url, "/streams");
 		bool is_videos_tab = ends_with(tab_url, "/videos");
 		bool is_shorts_tab = ends_with(tab_url, "/shorts");
 
 		if (tab["tabRenderer"]["content"].has_key("richGridRenderer")) {
+			auto rich_grid = tab["tabRenderer"]["content"]["richGridRenderer"];
+			if (rich_grid.has_key("header") && rich_grid["header"].has_key("feedFilterChipBarRenderer")) {
+				auto chips = rich_grid["header"]["feedFilterChipBarRenderer"]["contents"].array_items();
+				if (chips.size() >= 3) {
+					if (is_videos_tab) {
+						res.video_sort_token_newest =
+						    chips[0]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+						res.video_sort_token_popular =
+						    chips[1]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+						res.video_sort_token_oldest =
+						    chips[2]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+
+						// Detect which sort is currently selected
+						for (size_t i = 0; i < chips.size() && i < 3; i++) {
+							if (chips[i]["chipCloudChipRenderer"]["isSelected"].bool_value()) {
+								res.current_video_sort_type = i;
+								break;
+							}
+						}
+					} else if (is_shorts_tab) {
+						res.shorts_sort_token_newest =
+						    chips[0]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+						res.shorts_sort_token_popular =
+						    chips[1]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+						res.shorts_sort_token_oldest =
+						    chips[2]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+
+						// Detect which sort is currently selected
+						for (size_t i = 0; i < chips.size() && i < 3; i++) {
+							if (chips[i]["chipCloudChipRenderer"]["isSelected"].bool_value()) {
+								res.current_shorts_sort_type = i;
+								break;
+							}
+						}
+					}
+				}
+			}
+
 			for (auto i : tab["tabRenderer"]["content"]["richGridRenderer"]["contents"].array_items()) {
 				if (i.has_key("continuationItemRenderer")) {
-					std::string token = i["continuationItemRenderer"]["continuationEndpoint"]["continuationCommand"]["token"].string_value();
+					std::string token =
+					    i["continuationItemRenderer"]["continuationEndpoint"]["continuationCommand"]["token"]
+					        .string_value();
 					if (is_streams_tab) {
 						res.streams_continue_token = token;
 					} else if (is_videos_tab) {
@@ -95,11 +141,14 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 
 					std::string video_id;
 					if (shorts_data["onTap"]["innertubeCommand"].has_key("reelWatchEndpoint")) {
-						video_id = shorts_data["onTap"]["innertubeCommand"]["reelWatchEndpoint"]["videoId"].string_value();
+						video_id =
+						    shorts_data["onTap"]["innertubeCommand"]["reelWatchEndpoint"]["videoId"].string_value();
 					}
-					
+
 					if (video_id.empty() && shorts_data["onTap"]["innertubeCommand"].has_key("commandMetadata")) {
-						std::string url = shorts_data["onTap"]["innertubeCommand"]["commandMetadata"]["webCommandMetadata"]["url"].string_value();
+						std::string url =
+						    shorts_data["onTap"]["innertubeCommand"]["commandMetadata"]["webCommandMetadata"]["url"]
+						        .string_value();
 						if (url.find("/shorts/") != std::string::npos) {
 							video_id = url.substr(url.find("/shorts/") + 8);
 							size_t param_pos = video_id.find('?');
@@ -108,7 +157,7 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 							}
 						}
 					}
-					
+
 					if (!video_id.empty()) {
 						short_video.url = "https://m.youtube.com/watch?v=" + video_id;
 					}
@@ -116,21 +165,24 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 					if (shorts_data.has_key("overlayMetadata")) {
 						auto overlay_metadata = shorts_data["overlayMetadata"];
 
-						if (overlay_metadata.has_key("primaryText") && overlay_metadata["primaryText"].has_key("content")) {
+						if (overlay_metadata.has_key("primaryText") &&
+						    overlay_metadata["primaryText"].has_key("content")) {
 							short_video.title = overlay_metadata["primaryText"]["content"].string_value();
 						}
 
-						if (overlay_metadata.has_key("secondaryText") && overlay_metadata["secondaryText"].has_key("content")) {
+						if (overlay_metadata.has_key("secondaryText") &&
+						    overlay_metadata["secondaryText"].has_key("content")) {
 							short_video.views_str = overlay_metadata["secondaryText"]["content"].string_value();
 						}
 					}
 
 					if (shorts_data["thumbnail"]["sources"].array_items().size() > 0) {
-						std::string original_thumbnail_url = shorts_data["thumbnail"]["sources"].array_items()[0]["url"].string_value();
-						
+						std::string original_thumbnail_url =
+						    shorts_data["thumbnail"]["sources"].array_items()[0]["url"].string_value();
+
 						// Convert webp format to jpg if necessary
 						std::string converted_thumbnail_url = convert_webp_thumbnail_to_jpg(original_thumbnail_url);
-						
+
 						std::string video_id = get_video_id_from_thumbnail_url(converted_thumbnail_url);
 						if (!video_id.empty()) {
 							short_video.thumbnail_url = youtube_get_video_thumbnail_url_by_id(video_id);
@@ -138,10 +190,10 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 							short_video.thumbnail_url = converted_thumbnail_url;
 						}
 					}
-					
+
 					short_video.duration_text = "";
 					short_video.author = res.name;
-					
+
 					if (is_shorts_tab) {
 						res.shorts.push_back(short_video);
 					}
@@ -150,8 +202,7 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 				}
 			}
 		}
-		tab_url =
-		    tab["tabRenderer"]["endpoint"]["commandMetadata"]["webCommandMetadata"]["url"].string_value();
+		tab_url = tab["tabRenderer"]["endpoint"]["commandMetadata"]["webCommandMetadata"]["url"].string_value();
 		if (ends_with(tab_url, "/playlists")) {
 			res.playlist_tab_browse_id = tab["tabRenderer"]["endpoint"]["browseEndpoint"]["browseId"].string_value();
 			res.playlist_tab_params = tab["tabRenderer"]["endpoint"]["browseEndpoint"]["params"].string_value();
@@ -319,7 +370,8 @@ YouTubeChannelDetail youtube_load_channel_shorts_page(std::string url_or_id) {
 				return res;
 			}
 			Document json_root;
-			parse_channel_data(get_initial_data(json_root, html), res);
+			auto initial_data = get_initial_data(json_root, html);
+			parse_channel_data(initial_data, res);
 			res.shorts_loaded = true;
 		}
 	} else {
@@ -402,7 +454,11 @@ void YouTubeChannelDetail::load_more_videos() {
 		    videos_continue_token = "";
 
 		    for (auto i : yt_result["onResponseReceivedActions"].array_items()) {
-			    for (auto j : i["appendContinuationItemsAction"]["continuationItems"].array_items()) {
+			    auto continuation_items = i.has_key("appendContinuationItemsAction")
+			                                  ? i["appendContinuationItemsAction"]["continuationItems"]
+			                                  : i["reloadContinuationItemsCommand"]["continuationItems"];
+
+			    for (auto j : continuation_items.array_items()) {
 				    if (j["richItemRenderer"]["content"].has_key("videoWithContextRenderer")) {
 					    videos.push_back(
 					        parse_succinct_video(j["richItemRenderer"]["content"]["videoWithContextRenderer"]));
@@ -429,38 +485,37 @@ void YouTubeChannelDetail::load_more_streams() {
 	}
 
 	std::string post_content =
-		R"({"context": {"client": {"hl": "%0", "gl": "%1", "clientName": "MWEB", "clientVersion": "2.20241202.07.00", "utcOffsetMinutes": 0}, "request": {}, "user": {}}, "continuation": ")" +
-		streams_continue_token + "\"}";
+	    R"({"context": {"client": {"hl": "%0", "gl": "%1", "clientName": "MWEB", "clientVersion": "2.20241202.07.00", "utcOffsetMinutes": 0}, "request": {}, "user": {}}, "continuation": ")" +
+	    streams_continue_token + "\"}";
 	post_content = std::regex_replace(post_content, std::regex("%0"), language_code);
 	post_content = std::regex_replace(post_content, std::regex("%1"), country_code);
 
 	access_and_parse_json(
-		[&]() { return http_post_json(get_innertube_api_url("browse"), post_content); },
-		[&](Document &, RJson yt_result) {
-			streams_continue_token = "";
+	    [&]() { return http_post_json(get_innertube_api_url("browse"), post_content); },
+	    [&](Document &, RJson yt_result) {
+		    streams_continue_token = "";
 
-			for (auto i : yt_result["onResponseReceivedActions"].array_items()) {
-				for (auto j : i["appendContinuationItemsAction"]["continuationItems"].array_items()) {
-					if (j["richItemRenderer"]["content"].has_key("videoWithContextRenderer")) {
-						streams.push_back(
-							parse_succinct_video(j["richItemRenderer"]["content"]["videoWithContextRenderer"]));
-					} else if (j["richItemRenderer"]["content"].has_key("videoRenderer")) {
-						streams.push_back(
-							parse_succinct_video(j["richItemRenderer"]["content"]["videoRenderer"]));
-					} else if (j.has_key("compactVideoRenderer")) {
-						streams.push_back(parse_succinct_video(j["compactVideoRenderer"]));
-					} else if (j.has_key("continuationItemRenderer")) {
-						streams_continue_token =
-							j["continuationItemRenderer"]["continuationEndpoint"]["continuationCommand"]["token"]
-								.string_value();
-					}
-				}
-			}
-			if (streams_continue_token == "") {
-				debug_caution("failed to get next continue token");
-			}
-		},
-		[&](const std::string &error) { debug_error((this->error = "[ch+s] " + error)); });
+		    for (auto i : yt_result["onResponseReceivedActions"].array_items()) {
+			    for (auto j : i["appendContinuationItemsAction"]["continuationItems"].array_items()) {
+				    if (j["richItemRenderer"]["content"].has_key("videoWithContextRenderer")) {
+					    streams.push_back(
+					        parse_succinct_video(j["richItemRenderer"]["content"]["videoWithContextRenderer"]));
+				    } else if (j["richItemRenderer"]["content"].has_key("videoRenderer")) {
+					    streams.push_back(parse_succinct_video(j["richItemRenderer"]["content"]["videoRenderer"]));
+				    } else if (j.has_key("compactVideoRenderer")) {
+					    streams.push_back(parse_succinct_video(j["compactVideoRenderer"]));
+				    } else if (j.has_key("continuationItemRenderer")) {
+					    streams_continue_token =
+					        j["continuationItemRenderer"]["continuationEndpoint"]["continuationCommand"]["token"]
+					            .string_value();
+				    }
+			    }
+		    }
+		    if (streams_continue_token == "") {
+			    debug_caution("failed to get next continue token");
+		    }
+	    },
+	    [&](const std::string &error) { debug_error((this->error = "[ch+s] " + error)); });
 }
 
 void YouTubeChannelDetail::load_more_shorts() {
@@ -479,20 +534,29 @@ void YouTubeChannelDetail::load_more_shorts() {
 	    [&]() { return http_post_json(get_innertube_api_url("browse"), post_content); },
 	    [&](Document &, RJson yt_result) {
 		    shorts_continue_token = "";
-
 		    for (auto i : yt_result["onResponseReceivedActions"].array_items()) {
-			    for (auto j : i["appendContinuationItemsAction"]["continuationItems"].array_items()) {
+			    RJson continuation_items;
+			    if (i.has_key("appendContinuationItemsAction")) {
+				    continuation_items = i["appendContinuationItemsAction"]["continuationItems"];
+			    } else if (i.has_key("reloadContinuationItemsCommand")) {
+				    continuation_items = i["reloadContinuationItemsCommand"]["continuationItems"];
+			    }
+
+			    for (auto j : continuation_items.array_items()) {
 				    if (j["richItemRenderer"]["content"].has_key("shortsLockupViewModel")) {
 					    auto shorts_data = j["richItemRenderer"]["content"]["shortsLockupViewModel"];
 					    YouTubeVideoSuccinct short_video;
 
 					    std::string video_id;
 					    if (shorts_data["onTap"]["innertubeCommand"].has_key("reelWatchEndpoint")) {
-						    video_id = shorts_data["onTap"]["innertubeCommand"]["reelWatchEndpoint"]["videoId"].string_value();
+						    video_id =
+						        shorts_data["onTap"]["innertubeCommand"]["reelWatchEndpoint"]["videoId"].string_value();
 					    }
-					    
+
 					    if (video_id.empty() && shorts_data["onTap"]["innertubeCommand"].has_key("commandMetadata")) {
-						    std::string url = shorts_data["onTap"]["innertubeCommand"]["commandMetadata"]["webCommandMetadata"]["url"].string_value();
+						    std::string url =
+						        shorts_data["onTap"]["innertubeCommand"]["commandMetadata"]["webCommandMetadata"]["url"]
+						            .string_value();
 						    if (url.find("/shorts/") != std::string::npos) {
 							    video_id = url.substr(url.find("/shorts/") + 8);
 							    size_t param_pos = video_id.find('?');
@@ -501,7 +565,7 @@ void YouTubeChannelDetail::load_more_shorts() {
 							    }
 						    }
 					    }
-					    
+
 					    if (!video_id.empty()) {
 						    short_video.url = "https://m.youtube.com/watch?v=" + video_id;
 					    }
@@ -509,21 +573,24 @@ void YouTubeChannelDetail::load_more_shorts() {
 					    if (shorts_data.has_key("overlayMetadata")) {
 						    auto overlay_metadata = shorts_data["overlayMetadata"];
 
-						    if (overlay_metadata.has_key("primaryText") && overlay_metadata["primaryText"].has_key("content")) {
+						    if (overlay_metadata.has_key("primaryText") &&
+						        overlay_metadata["primaryText"].has_key("content")) {
 							    short_video.title = overlay_metadata["primaryText"]["content"].string_value();
 						    }
 
-						    if (overlay_metadata.has_key("secondaryText") && overlay_metadata["secondaryText"].has_key("content")) {
+						    if (overlay_metadata.has_key("secondaryText") &&
+						        overlay_metadata["secondaryText"].has_key("content")) {
 							    short_video.views_str = overlay_metadata["secondaryText"]["content"].string_value();
 						    }
 					    }
 
 					    if (shorts_data["thumbnail"]["sources"].array_items().size() > 0) {
-						    std::string original_thumbnail_url = shorts_data["thumbnail"]["sources"].array_items()[0]["url"].string_value();
-						    
+						    std::string original_thumbnail_url =
+						        shorts_data["thumbnail"]["sources"].array_items()[0]["url"].string_value();
+
 						    // Convert webp format to jpg if necessary
 						    std::string converted_thumbnail_url = convert_webp_thumbnail_to_jpg(original_thumbnail_url);
-						    
+
 						    std::string video_id = get_video_id_from_thumbnail_url(converted_thumbnail_url);
 						    if (!video_id.empty()) {
 							    short_video.thumbnail_url = youtube_get_video_thumbnail_url_by_id(video_id);
@@ -531,10 +598,10 @@ void YouTubeChannelDetail::load_more_shorts() {
 							    short_video.thumbnail_url = converted_thumbnail_url;
 						    }
 					    }
-					    
+
 					    short_video.duration_text = "";
 					    short_video.author = name;
-					    
+
 					    shorts.push_back(short_video);
 				    } else if (j.has_key("continuationItemRenderer")) {
 					    shorts_continue_token =

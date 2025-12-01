@@ -70,6 +70,8 @@
 <UNSUBSCRIBE>Desuscribirse</UNSUBSCRIBE> --- UNUSED ----
 <SUBSCRIBED_CHANNELS>Suscripciones</SUBSCRIBED_CHANNELS>
 <SUBSCRIPTION>Suscripción</SUBSCRIPTION>
+<LOCAL_CHANNELS>Local</LOCAL_CHANNELS>
+<ACCOUNT>Account</ACCOUNT>
 <NEW_VIDEOS>Nuevo</NEW_VIDEOS>
 <HOME>Inicio</HOME>
 <NO_VIDEOS>Sin videos</NO_VIDEOS>
@@ -95,6 +97,9 @@
 <MY_VIEW_COUNT_WITH_NUMBER>%0 vista(s)</MY_VIEW_COUNT_WITH_NUMBER>
 <BY_LAST_WATCH_TIME>Por fecha</BY_LAST_WATCH_TIME>
 <BY_MY_VIEW_COUNT>Por vistas</BY_MY_VIEW_COUNT>
+<LATEST>Más recientes</LATEST>
+<POPULAR>Populares</POPULAR>
+<OLDEST>Más antiguos</OLDEST>
 <PLAYLIST_SHORT>Lista</PLAYLIST_SHORT>
 <SETTINGS_DISPLAY_UI>Pantalla/IU</SETTINGS_DISPLAY_UI>
 <SETTINGS_DATA>Datos</SETTINGS_DATA>
@@ -109,6 +114,7 @@
 <SHOW_FULL_DISLIKE>Mostrar todos los No me gusta/Like</SHOW_FULL_DISLIKE>
 <HIDE_POINTER>Hide pointer</HIDE_POINTER>
 <DARK_THEME>Tema Oscuro</DARK_THEME>
+<DISABLE_PULL_TO_REFRESH>Disable pull-to-refresh</DISABLE_PULL_TO_REFRESH>
 <AUTOPLAY>Reproducción automática</AUTOPLAY>
 <LOOP>Bucle</LOOP>
 <ONLY_IN_PLAYLIST>Solo en listas de reproducción</ONLY_IN_PLAYLIST>
@@ -121,3 +127,22 @@
 <RESTART_TO_APPLY>Restablecer para aplicar</RESTART_TO_APPLY>
 <VIDEO_SHOW_DEBUG_INFO>Mostrar información para nerds</VIDEO_SHOW_DEBUG_INFO>
 <PLAYER_RESPONSE>Datos de la aplicación para usar</PLAYER_RESPONSE>
+<INFO_DISABLE_PULL_TO_REFRESH>Disables pull-to-refresh in all tabs.\nWhen enabled, shows a reload button\nin the New tab instead.</INFO_DISABLE_PULL_TO_REFRESH>
+<INFO_ECO_MODE>Saves battery by reducing\nscreen update frequency.\nWhen enabled, the screen is\nredrawn only when content changes.</INFO_ECO_MODE>
+<INFO_PLAYER_RESPONSE>Change the spoofed client.\nAndroid VR is used when logged in,\nignoring this setting.</INFO_PLAYER_RESPONSE>
+<INFO_OAUTH>Accesses YouTube using\nAndroid VR client.\nAutomatically falls back to\nunauthenticated Android client\nif videos cannot be played,\nsuch as kids videos.</INFO_OAUTH>
+<OAUTH>YouTube Login</OAUTH>
+<OAUTH_LOGIN>Login to YouTube</OAUTH_LOGIN>
+<OAUTH_LOGOUT>Logout</OAUTH_LOGOUT>
+<OAUTH_STATUS>Login Status</OAUTH_STATUS>
+<OAUTH_NOT_AUTHENTICATED>Not logged in</OAUTH_NOT_AUTHENTICATED>
+<OAUTH_AUTHENTICATED>Logged in</OAUTH_AUTHENTICATED>
+<OAUTH_AUTHENTICATING>Authenticating...</OAUTH_AUTHENTICATING>
+<OAUTH_ERROR>Authentication error</OAUTH_ERROR>
+<OAUTH_DEVICE_CODE>Device Code</OAUTH_DEVICE_CODE>
+<OAUTH_USER_CODE>User Code: %0</OAUTH_USER_CODE>
+<OAUTH_VERIFICATION_URL>Visit: https://google.com/device</OAUTH_VERIFICATION_URL>
+<OAUTH_WAITING>Waiting for authentication...</OAUTH_WAITING>
+<OAUTH_TIMEOUT>Authentication timed out</OAUTH_TIMEOUT>
+<OAUTH_LOGIN_INSTRUCTION>1. Open a web browser\n2. Visit the URL shown\n3. Enter the device code\n4. Authorize the app</OAUTH_LOGIN_INSTRUCTION>
+<OAUTH_TOKEN_WARNING>Never share oauth_tokens file\nwith anyone. This file contains access\ncredentials to your YouTube account.</OAUTH_TOKEN_WARNING>
