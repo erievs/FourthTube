@@ -356,6 +356,11 @@ static void extract_metadata(RJson data, YouTubeVideoDetail &res) {
 										auto owner = metadata["owner"]["videoOwnerRenderer"];
 										res.author.name = get_text_from_object(owner["title"]);
 										res.author.subscribers = get_text_from_object(owner["subscriberCountText"]);
+										// Check if this is a collaboration channel
+										if (owner.has_key("title") && owner["title"].has_key("runs")) {
+											res.author.is_collaboration =
+											    owner["title"]["runs"].array_items().size() > 1;
+										}
 										if (owner.has_key("navigationEndpoint")) {
 											res.author.id = owner["navigationEndpoint"]["browseEndpoint"]["browseId"]
 											                    .string_value();
