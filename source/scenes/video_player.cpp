@@ -1365,11 +1365,27 @@ static void load_video_page(void *arg) {
 				video_p_value = var_video_quality;
 			}
 		}
-		video_quality_selector_view->selected_button =
-		    audio_only_mode
-		        ? 0
-		        : 1 + std::find(available_qualities.begin(), available_qualities.end(), (int)video_p_value) -
-		              available_qualities.begin();
+
+		if (audio_only_mode) {
+			video_quality_selector_view->selected_button = 0;
+		} else {
+			auto it = std::find(available_qualities.begin(), available_qualities.end(), (int)video_p_value);
+			if (it != available_qualities.end()) {
+				video_quality_selector_view->selected_button = 1 + (it - available_qualities.begin());
+			} else {
+				auto closest_it = std::min_element(available_qualities.begin(), available_qualities.end(),
+				                                   [video_p_value = video_p_value](int a, int b) {
+					                                   return std::abs(a - video_p_value) < std::abs(b - video_p_value);
+				                                   });
+				if (closest_it != available_qualities.end()) {
+					video_p_value = *closest_it;
+					video_quality_selector_view->selected_button = 1 + (closest_it - available_qualities.begin());
+				} else {
+					audio_only_mode = true;
+					video_quality_selector_view->selected_button = 0;
+				}
+			}
+		}
 		video_quality_selector_view->set_on_change([available_qualities](const SelectorView &view) {
 			bool changed = false;
 			if (view.selected_button == 0) {
