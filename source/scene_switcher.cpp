@@ -43,7 +43,9 @@ void Menu_init(void) {
 
 	logger.init();
 
-	logger.info(DEF_MENU_INIT_STR, "Initializing..." + DEF_CURRENT_APP_VER);
+	logger.info(DEF_MENU_INIT_STR, "Initializing...");
+	logger.info(DEF_MENU_INIT_STR, "Version is \"" + DEF_CURRENT_APP_VER + "\"");
+
 
 	osSetSpeedupEnable(true);
 	svcSetThreadPriority(CUR_THREAD_HANDLE, DEF_THREAD_PRIORITY_HIGH - 1);
