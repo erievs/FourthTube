@@ -5,6 +5,7 @@
 #include <regex>
 
 #include "scenes/video_player.hpp"
+#include "scenes/home.hpp"
 #include "ui/overlay.hpp"
 #include "ui/ui.hpp"
 #include "network_decoder/network_io.hpp"
@@ -1048,6 +1049,7 @@ static void load_video_page(void *arg) {
 						                       subscription_subscribe(new_channel);
 					                       }
 					                       misc_tasks_request(TASK_SAVE_SUBSCRIPTION);
+					                       Home_update_local_channels();
 					                       var_need_refresh = true;
 				                       }
 			                       })}),

@@ -325,6 +325,17 @@ void Home_rebuild_channels_tab(void) {
 	var_need_refresh = true;
 }
 
+void Home_update_local_channels(void) {
+	if (!already_init) {
+		return;
+	}
+
+	resource_lock.lock();
+	update_subscribed_channels(get_valid_subscribed_channels());
+	resource_lock.unlock();
+	var_need_refresh = true;
+}
+
 void Home_rebuild_feed_tab(void) {
 	if (!already_init) {
 		return;

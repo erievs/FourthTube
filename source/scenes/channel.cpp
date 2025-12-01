@@ -7,6 +7,7 @@
 
 #include "scenes/channel.hpp"
 #include "scenes/video_player.hpp"
+#include "scenes/home.hpp"
 #include "youtube_parser/parser.hpp"
 #include "ui/overlay.hpp"
 #include "ui/colors.hpp"
@@ -496,6 +497,7 @@ static void load_channel(void *) {
 			    subscription_subscribe(new_channel);
 		    }
 		    misc_tasks_request(TASK_SAVE_SUBSCRIPTION);
+		    Home_update_local_channels();
 		    var_need_refresh = true;
 	    })
 	    ->set_get_is_subscribed([]() { return subscription_is_subscribed(channel_info.id); })
