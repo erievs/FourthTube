@@ -24,6 +24,8 @@ struct ChannelView : public FixedSizeView {
 	virtual ~ChannelView() {}
 
 	std::string name;
+	std::string handle;
+	std::string subscriber_count;
 	bool subscribe_button_holding = false;
 	int icon_handle = -1;
 
@@ -32,6 +34,14 @@ struct ChannelView : public FixedSizeView {
 
 	ChannelView *set_name(const std::string &name) { // mandatory
 		this->name = name;
+		return this;
+	}
+	ChannelView *set_handle(const std::string &handle) {
+		this->handle = handle;
+		return this;
+	}
+	ChannelView *set_subscriber_count(const std::string &subscriber_count) {
+		this->subscriber_count = subscriber_count;
 		return this;
 	}
 	ChannelView *set_on_subscribe_button_released(CallBackFuncType on_subscribe_button_released) {
@@ -51,8 +61,22 @@ struct ChannelView : public FixedSizeView {
 		if (get_is_subscribed) {
 			thumbnail_draw(icon_handle, x0 + SMALL_MARGIN, y0 + SMALL_MARGIN, CHANNEL_ICON_SIZE,
 			               CHANNEL_ICON_SIZE); // icon
-			Draw(name, x0 + CHANNEL_ICON_SIZE + SMALL_MARGIN * 3, y0, MIDDLE_FONT_SIZE, MIDDLE_FONT_SIZE,
+			Draw(name, x0 + CHANNEL_ICON_SIZE + SMALL_MARGIN * 3, y0 + SMALL_MARGIN, MIDDLE_FONT_SIZE, MIDDLE_FONT_SIZE,
 			     DEFAULT_TEXT_COLOR); // channel name
+
+			// Handle
+			double current_y = y0 + SMALL_MARGIN + MIDDLE_FONT_INTERVAL;
+			if (!handle.empty()) {
+				Draw(handle, x0 + CHANNEL_ICON_SIZE + SMALL_MARGIN * 3, current_y, 0.5, 0.5, LIGHT1_TEXT_COLOR);
+				current_y += DEFAULT_FONT_INTERVAL;
+			}
+
+			// Subscriber count
+			if (!subscriber_count.empty()) {
+				Draw(subscriber_count, x0 + CHANNEL_ICON_SIZE + SMALL_MARGIN * 3, current_y, 0.5, 0.5,
+				     LIGHT1_TEXT_COLOR);
+			}
+
 			bool is_subscribed = get_is_subscribed();
 			u32 subscribe_button_color = is_subscribed ? LIGHT1_BACK_COLOR : 0xFF4040EE;
 			std::string subscribe_button_str = is_subscribed ? LOCALIZED(SUBSCRIBED) : LOCALIZED(SUBSCRIBE);

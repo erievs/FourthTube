@@ -10,6 +10,7 @@ struct YouTubeChannelSuccinct {
 	std::string icon_url;
 	std::string subscribers;
 	std::string video_num;
+	bool is_collaboration = false;
 };
 struct YouTubeVideoSuccinct {
 	std::string url;
@@ -186,6 +187,7 @@ struct YouTubeChannelDetail {
 	std::string id;
 	std::string error;
 	std::string name;
+	std::string handle;
 	std::string url;
 	std::string url_original;
 	std::string icon_url;

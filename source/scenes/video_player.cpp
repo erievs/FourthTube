@@ -5,6 +5,7 @@
 #include <regex>
 
 #include "scenes/video_player.hpp"
+#include "scenes/home.hpp"
 #include "ui/overlay.hpp"
 #include "ui/ui.hpp"
 #include "network_decoder/network_io.hpp"
@@ -13,6 +14,7 @@
 #include "util/async_task.hpp"
 #include "util/misc_tasks.hpp"
 #include "util/util.hpp"
+#include "data_io/subscription_util.hpp"
 
 #define ICON_SIZE 55
 #define TAB_SELECTOR_HEIGHT 20
@@ -983,22 +985,74 @@ static void load_video_page(void *arg) {
 			        ->set_views(
 			            {(new EmptyView(0, 0, SMALL_MARGIN, ICON_SIZE)), new_main_icon_view,
 			             (new EmptyView(0, 0, SMALL_MARGIN, ICON_SIZE)),
-			             (new VerticalListView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE))
-			                 ->set_views({(new EmptyView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE, ICON_SIZE * 0.1)),
-			                              (new TextView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE,
-			                                            DEFAULT_FONT_INTERVAL + SMALL_MARGIN))
-			                                  ->set_text(tmp_video_info.author.name)
-			                                  ->set_font_size(0.55, DEFAULT_FONT_INTERVAL + SMALL_MARGIN),
-			                              (new TextView(0, 0, 320 - SMALL_MARGIN - ICON_SIZE, DEFAULT_FONT_INTERVAL))
-			                                  ->set_text(tmp_video_info.author.subscribers.empty()
-			                                                 ? ""
-			                                                 : (tmp_video_info.metadata_from_android_vr
-			                                                        ? tmp_video_info.author.subscribers
-			                                                        : std::regex_replace(
-			                                                              LOCALIZED(SUBSCRIBER_COUNT), std::regex("%0"),
+			             (new VerticalListView(0, 0,
+			                                   tmp_video_info.author.is_collaboration
+			                                       ? 320 - SMALL_MARGIN * 2 - ICON_SIZE
+			                                       : 320 - SMALL_MARGIN * 3 - ICON_SIZE - SUBSCRIBE_BUTTON_WIDTH))
+			                 ->set_views(
+			                     {(new EmptyView(0, 0,
+			                                     tmp_video_info.author.is_collaboration
+			                                         ? 320 - SMALL_MARGIN * 2 - ICON_SIZE
+			                                         : 320 - SMALL_MARGIN * 3 - ICON_SIZE - SUBSCRIBE_BUTTON_WIDTH,
+			                                     ICON_SIZE * 0.1)),
+			                      (new TextView(0, 0,
+			                                    tmp_video_info.author.is_collaboration
+			                                        ? 320 - SMALL_MARGIN * 2 - ICON_SIZE
+			                                        : 320 - SMALL_MARGIN * 3 - ICON_SIZE - SUBSCRIBE_BUTTON_WIDTH,
+			                                    DEFAULT_FONT_INTERVAL + SMALL_MARGIN))
+			                          ->set_text(tmp_video_info.author.name)
+			                          ->set_font_size(0.55, DEFAULT_FONT_INTERVAL + SMALL_MARGIN),
+			                      (new TextView(0, 0,
+			                                    tmp_video_info.author.is_collaboration
+			                                        ? 320 - SMALL_MARGIN * 2 - ICON_SIZE
+			                                        : 320 - SMALL_MARGIN * 3 - ICON_SIZE - SUBSCRIBE_BUTTON_WIDTH,
+			                                    DEFAULT_FONT_INTERVAL))
+			                          ->set_text(
+			                              tmp_video_info.author.subscribers.empty()
+			                                  ? ""
+			                                  : (tmp_video_info.metadata_from_android_vr
+			                                         ? tmp_video_info.author.subscribers
+			                                         : std::regex_replace(LOCALIZED(SUBSCRIBER_COUNT), std::regex("%0"),
 			                                                              tmp_video_info.author.subscribers)))
-			                                  ->set_font_size(0.45, DEFAULT_FONT_INTERVAL + SMALL_MARGIN)
-			                                  ->set_get_text_color([]() { return LIGHT1_TEXT_COLOR; })})}),
+			                          ->set_font_size(0.45, DEFAULT_FONT_INTERVAL + SMALL_MARGIN)
+			                          ->set_get_text_color([]() { return LIGHT1_TEXT_COLOR; })}),
+			             tmp_video_info.author.is_collaboration
+			                 ? (View *)(new EmptyView(0, 0, 0, ICON_SIZE))
+			                 : (View *)(new CustomView(0, 0, SUBSCRIBE_BUTTON_WIDTH, ICON_SIZE))
+			                       ->set_draw([author_id](const CustomView &view) {
+				                       bool is_subscribed = subscription_is_subscribed(author_id);
+				                       u32 button_color = is_subscribed ? LIGHT1_BACK_COLOR : 0xFF4040EE;
+				                       std::string button_text =
+				                           is_subscribed ? LOCALIZED(SUBSCRIBED) : LOCALIZED(SUBSCRIBE);
+				                       float button_y = view.y0 + (ICON_SIZE - SUBSCRIBE_BUTTON_HEIGHT) / 2;
+				                       Draw_texture(var_square_image[0], button_color, view.x0, button_y,
+				                                    SUBSCRIBE_BUTTON_WIDTH, SUBSCRIBE_BUTTON_HEIGHT);
+				                       Draw_x_centered(button_text, view.x0, view.x0 + SUBSCRIBE_BUTTON_WIDTH,
+				                                       button_y + 4, 0.5, 0.5, 0xFF000000);
+			                       })
+			                       ->set_update([author_id](CustomView &view, Hid_info key) {
+				                       float button_y = view.y0 + (ICON_SIZE - SUBSCRIBE_BUTTON_HEIGHT) / 2;
+				                       bool in_button =
+				                           key.touch_x >= view.x0 && key.touch_x < view.x0 + SUBSCRIBE_BUTTON_WIDTH &&
+				                           key.touch_y >= button_y && key.touch_y < button_y + SUBSCRIBE_BUTTON_HEIGHT;
+				                       if (key.p_touch && in_button) {
+					                       bool cur_subscribed = subscription_is_subscribed(author_id);
+					                       if (cur_subscribed) {
+						                       subscription_unsubscribe(author_id);
+					                       } else {
+						                       SubscriptionChannel new_channel;
+						                       new_channel.id = author_id;
+						                       new_channel.url = "https://m.youtube.com/channel/" + author_id;
+						                       new_channel.name = cur_video_info.author.name;
+						                       new_channel.icon_url = cur_video_info.author.icon_url;
+						                       new_channel.subscriber_count_str = cur_video_info.author.subscribers;
+						                       subscription_subscribe(new_channel);
+					                       }
+					                       misc_tasks_request(TASK_SAVE_SUBSCRIPTION);
+					                       Home_update_local_channels();
+					                       var_need_refresh = true;
+				                       }
+			                       })}),
 			    (new RuleView(0, 0, 320, SMALL_MARGIN * 2))->set_get_color([]() { return DEF_DRAW_GRAY; })};
 			if (tmp_video_info.is_upcoming) {
 				std::vector<View *> add_views = {
@@ -1365,11 +1419,27 @@ static void load_video_page(void *arg) {
 				video_p_value = var_video_quality;
 			}
 		}
-		video_quality_selector_view->selected_button =
-		    audio_only_mode
-		        ? 0
-		        : 1 + std::find(available_qualities.begin(), available_qualities.end(), (int)video_p_value) -
-		              available_qualities.begin();
+
+		if (audio_only_mode) {
+			video_quality_selector_view->selected_button = 0;
+		} else {
+			auto it = std::find(available_qualities.begin(), available_qualities.end(), (int)video_p_value);
+			if (it != available_qualities.end()) {
+				video_quality_selector_view->selected_button = 1 + (it - available_qualities.begin());
+			} else {
+				auto closest_it = std::min_element(available_qualities.begin(), available_qualities.end(),
+				                                   [video_p_value = video_p_value](int a, int b) {
+					                                   return std::abs(a - video_p_value) < std::abs(b - video_p_value);
+				                                   });
+				if (closest_it != available_qualities.end()) {
+					video_p_value = *closest_it;
+					video_quality_selector_view->selected_button = 1 + (closest_it - available_qualities.begin());
+				} else {
+					audio_only_mode = true;
+					video_quality_selector_view->selected_button = 0;
+				}
+			}
+		}
 		video_quality_selector_view->set_on_change([available_qualities](const SelectorView &view) {
 			bool changed = false;
 			if (view.selected_button == 0) {

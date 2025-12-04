@@ -20,6 +20,15 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 
 	auto metadata_renderer = data["metadata"]["channelMetadataRenderer"];
 	res.name = metadata_renderer["title"].string_value();
+
+	std::string vanity_url = metadata_renderer["vanityChannelUrl"].string_value();
+	if (!vanity_url.empty()) {
+		size_t at_pos = vanity_url.find('@');
+		if (at_pos != std::string::npos) {
+			res.handle = url_decode(vanity_url.substr(at_pos));
+		}
+	}
+
 	if (data["header"].has_key("c4TabbedHeaderRenderer")) {
 		res.subscriber_count_str =
 		    get_text_from_object(data["header"]["c4TabbedHeaderRenderer"]["subscriberCountText"]);
