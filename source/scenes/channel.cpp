@@ -42,6 +42,8 @@ int VIDEO_LIST_Y_HIGH = 240;
 
 int cur_video_sort_type = 0; // 0: newest, 1: popular, 2: oldest
 int video_sort_request = -1;
+int cur_streams_sort_type = 0; // 0: newest, 1: popular, 2: oldest
+int streams_sort_request = -1;
 int cur_shorts_sort_type = 0; // 0: newest, 1: popular, 2: oldest
 int shorts_sort_request = -1;
 
@@ -50,6 +52,7 @@ ImageView *banner_view;
 ChannelView *channel_view;
 Tab2View *tab_view;
 SelectorView *video_sort_selector;
+SelectorView *streams_sort_selector;
 SelectorView *shorts_sort_selector;
 // anonymous VerticalListView
 VerticalListView *video_list_view;
@@ -104,6 +107,15 @@ void Channel_init(void) {
 	                          ->set_on_change([](const SelectorView &view) {
 		                          video_sort_request = cur_video_sort_type = view.selected_button;
 	                          });
+
+	streams_sort_selector = (new SelectorView(0, 0, 320, MIDDLE_FONT_INTERVAL, false))
+	                            ->set_texts({(std::function<std::string()>)[]() { return LOCALIZED(LATEST); },
+	                                         (std::function<std::string()>)[]() { return LOCALIZED(POPULAR); },
+	                                         (std::function<std::string()>)[]() { return LOCALIZED(OLDEST); }},
+	                                        cur_streams_sort_type)
+	                            ->set_on_change([](const SelectorView &view) {
+		                            streams_sort_request = cur_streams_sort_type = view.selected_button;
+	                            });
 
 	shorts_sort_selector = (new SelectorView(0, 0, 320, MIDDLE_FONT_INTERVAL, false))
 	                           ->set_texts({(std::function<std::string()>)[]() { return LOCALIZED(LATEST); },
@@ -201,7 +213,10 @@ void Channel_init(void) {
 	                 ->set_views(
 	                     {(new HorizontalListView(0, 0, MIDDLE_FONT_INTERVAL))->set_views({video_sort_selector}),
 	                      (new RuleView(0, 0, 320, 2)), video_list_view, video_load_more_view}),
-	             (new VerticalListView(0, 0, 320))->set_views({stream_list_view, stream_load_more_view}),
+	             (new VerticalListView(0, 0, 320))
+	                 ->set_views(
+	                     {(new HorizontalListView(0, 0, MIDDLE_FONT_INTERVAL))->set_views({streams_sort_selector}),
+	                      (new RuleView(0, 0, 320, 2)), stream_list_view, stream_load_more_view}),
 	             (new VerticalListView(0, 0, 320))
 	                 ->set_views(
 	                     {(new HorizontalListView(0, 0, MIDDLE_FONT_INTERVAL))->set_views({shorts_sort_selector}),
@@ -248,6 +263,9 @@ void Channel_resume(std::string arg) {
 	} else {
 		if (video_sort_selector) {
 			video_sort_selector->selected_button = cur_video_sort_type;
+		}
+		if (streams_sort_selector) {
+			streams_sort_selector->selected_button = cur_streams_sort_type;
 		}
 		if (shorts_sort_selector) {
 			shorts_sort_selector->selected_button = cur_shorts_sort_type;
@@ -359,6 +377,7 @@ View *community_post_2_view(const YouTubeChannelDetail::CommunityPost &post) {
 	    ->set_time_str(post.time)
 	    ->set_upvote_str(post.upvotes_str)
 	    ->set_additional_image_url(post.image_url)
+	    ->set_disable_timestamps(true)
 	    ->set_content_lines(content_lines)
 	    ->set_has_more_replies([]() { return false; });
 
@@ -463,6 +482,10 @@ static void load_channel(void *) {
 	if (video_sort_selector) {
 		video_sort_selector->selected_button = cur_video_sort_type;
 	}
+	cur_streams_sort_type = channel_info.current_streams_sort_type;
+	if (streams_sort_selector) {
+		streams_sort_selector->selected_button = cur_streams_sort_type;
+	}
 	cur_shorts_sort_type = channel_info.current_shorts_sort_type;
 	if (shorts_sort_selector) {
 		shorts_sort_selector->selected_button = cur_shorts_sort_type;
@@ -552,6 +575,20 @@ static void load_channel(void *) {
 		stream_load_more_view->set_text((std::function<std::string()>)[]() {
 			return channel_info.error != "" ? channel_info.error : LOCALIZED(LOADING);
 		});
+	}
+
+	auto streams_tab_view = dynamic_cast<VerticalListView *>(tab_view->views[1]);
+	if (!channel_info.streams_sort_token_newest.empty() || !channel_info.streams_sort_token_popular.empty() ||
+	    !channel_info.streams_sort_token_oldest.empty()) {
+		dynamic_cast<HorizontalListView *>(streams_tab_view->views[0])->update_y_range(0, MIDDLE_FONT_INTERVAL);
+		streams_tab_view->views[0]->set_is_visible(true);
+		dynamic_cast<RuleView *>(streams_tab_view->views[1])->update_y_range(0, 2);
+		streams_tab_view->views[1]->set_is_visible(true);
+	} else {
+		dynamic_cast<HorizontalListView *>(streams_tab_view->views[0])->update_y_range(0, 0);
+		streams_tab_view->views[0]->set_is_visible(false);
+		dynamic_cast<RuleView *>(streams_tab_view->views[1])->update_y_range(0, 0);
+		streams_tab_view->views[1]->set_is_visible(false);
 	}
 
 	// shorts list
@@ -699,6 +736,15 @@ static void load_channel_stream(void *) {
 	channel_info.streams = streams_result.streams;
 	channel_info.streams_continue_token = streams_result.streams_continue_token;
 	channel_info.streams_loaded = true;
+	// Update sort tokens
+	channel_info.streams_sort_token_newest = streams_result.streams_sort_token_newest;
+	channel_info.streams_sort_token_popular = streams_result.streams_sort_token_popular;
+	channel_info.streams_sort_token_oldest = streams_result.streams_sort_token_oldest;
+	channel_info.current_streams_sort_type = streams_result.current_streams_sort_type;
+	cur_streams_sort_type = streams_result.current_streams_sort_type;
+	if (streams_sort_selector) {
+		streams_sort_selector->selected_button = cur_streams_sort_type;
+	}
 	if (streams_result.error == "") {
 		channel_info_cache[channel_info.url_original] = channel_info;
 	}
@@ -713,6 +759,20 @@ static void load_channel_stream(void *) {
 	} else {
 		stream_load_more_view->update_y_range(0, 0);
 		stream_load_more_view->set_is_visible(false);
+	}
+
+	auto streams_tab_view = dynamic_cast<VerticalListView *>(tab_view->views[1]);
+	if (!channel_info.streams_sort_token_newest.empty() || !channel_info.streams_sort_token_popular.empty() ||
+	    !channel_info.streams_sort_token_oldest.empty()) {
+		dynamic_cast<HorizontalListView *>(streams_tab_view->views[0])->update_y_range(0, MIDDLE_FONT_INTERVAL);
+		streams_tab_view->views[0]->set_is_visible(true);
+		dynamic_cast<RuleView *>(streams_tab_view->views[1])->update_y_range(0, 2);
+		streams_tab_view->views[1]->set_is_visible(true);
+	} else {
+		dynamic_cast<HorizontalListView *>(streams_tab_view->views[0])->update_y_range(0, 0);
+		streams_tab_view->views[0]->set_is_visible(false);
+		dynamic_cast<RuleView *>(streams_tab_view->views[1])->update_y_range(0, 0);
+		streams_tab_view->views[1]->set_is_visible(false);
 	}
 
 	var_need_refresh = true;
@@ -1111,6 +1171,32 @@ void Channel_draw(void) {
 			}
 
 			video_sort_request = -1;
+		}
+
+		if (streams_sort_request != -1 && tab_view && tab_view->selected_tab == 1) {
+			std::string sort_token;
+			if (streams_sort_request == 0) {
+				sort_token = channel_info.streams_sort_token_newest;
+			} else if (streams_sort_request == 1) {
+				sort_token = channel_info.streams_sort_token_popular;
+			} else if (streams_sort_request == 2) {
+				sort_token = channel_info.streams_sort_token_oldest;
+			}
+
+			if (!sort_token.empty()) {
+				stream_list_view->recursive_delete_subviews();
+				stream_list_view->views.clear();
+				channel_info.streams.clear();
+				channel_info.streams_continue_token = sort_token;
+				channel_info.current_streams_sort_type = streams_sort_request;
+				channel_info_cache[cur_channel_url] = channel_info;
+
+				if (!is_async_task_running(load_channel_stream_more)) {
+					queue_async_task(load_channel_stream_more, NULL);
+				}
+			}
+
+			streams_sort_request = -1;
 		}
 
 		if (shorts_sort_request != -1 && tab_view && tab_view->selected_tab == 2) {

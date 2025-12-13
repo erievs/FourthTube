@@ -206,6 +206,10 @@ struct YouTubeChannelDetail {
 	std::string video_sort_token_popular;
 	std::string video_sort_token_oldest;
 	int current_video_sort_type = 0; // 0: newest, 1: popular, 2: oldest
+	std::string streams_sort_token_newest;
+	std::string streams_sort_token_popular;
+	std::string streams_sort_token_oldest;
+	int current_streams_sort_type = 0; // 0: newest, 1: popular, 2: oldest
 	std::string shorts_sort_token_newest;
 	std::string shorts_sort_token_popular;
 	std::string shorts_sort_token_oldest;

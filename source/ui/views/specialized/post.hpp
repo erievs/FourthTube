@@ -45,6 +45,7 @@ struct PostView : public FixedWidthView {
 	static inline bool in_range(float x, float l, float r) { return x >= l && x < r; }
 
 	// timestamp helper methods
+	inline bool is_timestamp_enabled() const { return !disable_timestamps && on_timestamp_pressed_func; }
 	void parse_timestamps_from_content();
 	void reset_timestamp_holding_status();
 	void draw_content_line_with_timestamps(size_t line_index, float x, float y) const;
@@ -81,6 +82,7 @@ struct PostView : public FixedWidthView {
 	size_t replies_shown = 0;
 	bool is_reply = false;
 	bool is_description_mode = false;  // For video description display without icon/author
+	bool disable_timestamps = false;  // Disable timestamp parsing for community posts
 	volatile bool is_loading_replies = false;
 
 	std::function<bool()> get_has_more_replies;
@@ -220,7 +222,9 @@ struct PostView : public FixedWidthView {
 	PostView *set_content_lines(const std::vector<std::string> &content_lines) { // mandatory
 		this->content_lines = content_lines;
 		this->lines_shown = std::min<size_t>(3, content_lines.size());
-		parse_timestamps_from_content();
+		if (!disable_timestamps) {
+			parse_timestamps_from_content();
+		}
 		return this;
 	}
 	PostView *set_has_more_replies(const std::function<bool()> &get_has_more_replies) { // mandatory
@@ -245,6 +249,10 @@ struct PostView : public FixedWidthView {
 	}
 	PostView *set_on_timestamp_pressed(const std::function<void(double)> &on_timestamp_pressed_func) {
 		this->on_timestamp_pressed_func = on_timestamp_pressed_func;
+		return this;
+	}
+	PostView *set_disable_timestamps(bool disable_timestamps) {
+		this->disable_timestamps = disable_timestamps;
 		return this;
 	}
 
