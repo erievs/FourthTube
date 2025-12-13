@@ -290,10 +290,24 @@ void Draw(std::string text, float x, float y, float text_size_x, float text_size
 				C2D_Font cur_font = Extfont_is_extfont_loaded(0) ? system_fonts[prev_font_list_num] : NULL;
 
 				C2D_TextBufClear(c2d_buf);
+				float actual_text_size_x = text_size_x;
+				float actual_text_size_y = text_size_y;
+				float width_scale = 1.0f;
+
 				if (prev_font_list_num == 1) {
 					y_offset = 3 * text_size_y;
+				} else if (prev_font_list_num == 2) {
+					// Korean font scaling (80% visual size, 115% width)
+					y_offset = 4 * text_size_y;
+					actual_text_size_x *= 0.80;
+					actual_text_size_y *= 0.80;
+					width_scale = 1.15f;
 				} else if (prev_font_list_num == 3) {
+					// Traditional Chinese font scaling (80% visual size, 125% width)
 					y_offset = 5 * text_size_y;
+					actual_text_size_x *= 0.80;
+					actual_text_size_y *= 0.80;
+					width_scale = 1.25f;
 				} else {
 					y_offset = 0;
 				}
@@ -315,9 +329,10 @@ void Draw(std::string text, float x, float y, float text_size_x, float text_size
 
 				C2D_TextFontParse(&c2d_text, cur_font, c2d_buf, draw_str.c_str());
 				C2D_TextOptimize(&c2d_text);
-				C2D_TextGetDimensions(&c2d_text, text_size_x, text_size_y, &width, &height);
-				C2D_DrawText(&c2d_text, C2D_WithColor, x, y + y_offset, 0.0, text_size_x, text_size_y, abgr8888);
-				x += width;
+				C2D_TextGetDimensions(&c2d_text, actual_text_size_x, actual_text_size_y, &width, &height);
+				C2D_DrawText(&c2d_text, C2D_WithColor, x, y + y_offset, 0.0, actual_text_size_x, actual_text_size_y,
+				             abgr8888);
+				x += width * width_scale;
 			} else if (prev_font_list_num == 4) {
 				Extfont_draw_extfonts(draw_part_text + consecutive_start, i - consecutive_start, x, y,
 				                      text_size_x * 1.56, text_size_y * 1.56, abgr8888, &width);
@@ -484,11 +499,11 @@ Result_with_string Draw_load_texture(std::string file_name, int sheet_map_num, C
 
 void Draw_touch_pos(void) {
 	if (var_hide_pointer == false) {
-	Hid_info key;
-	Util_hid_query_key_state(&key);
-	if (key.p_touch || key.h_touch) {
-		Draw_texture(var_square_image[0], DEF_DRAW_RED, key.touch_x - 1, key.touch_y - 1, 3, 3);
-	}
+		Hid_info key;
+		Util_hid_query_key_state(&key);
+		if (key.p_touch || key.h_touch) {
+			Draw_texture(var_square_image[0], DEF_DRAW_RED, key.touch_x - 1, key.touch_y - 1, 3, 3);
+		}
 	}
 }
 
