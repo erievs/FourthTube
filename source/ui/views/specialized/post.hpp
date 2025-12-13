@@ -45,6 +45,7 @@ struct PostView : public FixedWidthView {
 	static inline bool in_range(float x, float l, float r) { return x >= l && x < r; }
 
 	// timestamp helper methods
+	inline bool is_timestamp_enabled() const { return !disable_timestamps && on_timestamp_pressed_func; }
 	void parse_timestamps_from_content();
 	void reset_timestamp_holding_status();
 	void draw_content_line_with_timestamps(size_t line_index, float x, float y) const;
