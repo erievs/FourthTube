@@ -82,6 +82,24 @@ static void parse_channel_data(RJson data, YouTubeChannelDetail &res) {
 								break;
 							}
 						}
+					} else if (is_streams_tab) {
+						res.streams_sort_token_newest =
+						    chips[0]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+						res.streams_sort_token_popular =
+						    chips[1]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+						res.streams_sort_token_oldest =
+						    chips[2]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
+						        .string_value();
+
+						// Detect which sort is currently selected
+						for (size_t i = 0; i < chips.size() && i < 3; i++) {
+							if (chips[i]["chipCloudChipRenderer"]["isSelected"].bool_value()) {
+								res.current_streams_sort_type = i;
+								break;
+							}
+						}
 					} else if (is_shorts_tab) {
 						res.shorts_sort_token_newest =
 						    chips[0]["chipCloudChipRenderer"]["navigationEndpoint"]["continuationCommand"]["token"]
@@ -316,7 +334,9 @@ YouTubeChannelDetail youtube_load_channel_streams_page(std::string url_or_id) {
 				return res;
 			}
 			Document json_root;
-			parse_channel_data(get_initial_data(json_root, html), res);
+			auto initial_data = get_initial_data(json_root, html);
+
+			parse_channel_data(initial_data, res);
 			res.streams_loaded = true;
 		}
 	} else {
@@ -505,7 +525,11 @@ void YouTubeChannelDetail::load_more_streams() {
 		    streams_continue_token = "";
 
 		    for (auto i : yt_result["onResponseReceivedActions"].array_items()) {
-			    for (auto j : i["appendContinuationItemsAction"]["continuationItems"].array_items()) {
+			    auto continuation_items = i.has_key("appendContinuationItemsAction")
+			                                  ? i["appendContinuationItemsAction"]["continuationItems"]
+			                                  : i["reloadContinuationItemsCommand"]["continuationItems"];
+
+			    for (auto j : continuation_items.array_items()) {
 				    if (j["richItemRenderer"]["content"].has_key("videoWithContextRenderer")) {
 					    streams.push_back(
 					        parse_succinct_video(j["richItemRenderer"]["content"]["videoWithContextRenderer"]));
