@@ -377,6 +377,7 @@ View *community_post_2_view(const YouTubeChannelDetail::CommunityPost &post) {
 	    ->set_time_str(post.time)
 	    ->set_upvote_str(post.upvotes_str)
 	    ->set_additional_image_url(post.image_url)
+	    ->set_disable_timestamps(true)
 	    ->set_content_lines(content_lines)
 	    ->set_has_more_replies([]() { return false; });
 

@@ -81,6 +81,7 @@ struct PostView : public FixedWidthView {
 	size_t replies_shown = 0;
 	bool is_reply = false;
 	bool is_description_mode = false;  // For video description display without icon/author
+	bool disable_timestamps = false;  // Disable timestamp parsing for community posts
 	volatile bool is_loading_replies = false;
 
 	std::function<bool()> get_has_more_replies;
@@ -220,7 +221,9 @@ struct PostView : public FixedWidthView {
 	PostView *set_content_lines(const std::vector<std::string> &content_lines) { // mandatory
 		this->content_lines = content_lines;
 		this->lines_shown = std::min<size_t>(3, content_lines.size());
-		parse_timestamps_from_content();
+		if (!disable_timestamps) {
+			parse_timestamps_from_content();
+		}
 		return this;
 	}
 	PostView *set_has_more_replies(const std::function<bool()> &get_has_more_replies) { // mandatory
@@ -245,6 +248,10 @@ struct PostView : public FixedWidthView {
 	}
 	PostView *set_on_timestamp_pressed(const std::function<void(double)> &on_timestamp_pressed_func) {
 		this->on_timestamp_pressed_func = on_timestamp_pressed_func;
+		return this;
+	}
+	PostView *set_disable_timestamps(bool disable_timestamps) {
+		this->disable_timestamps = disable_timestamps;
 		return this;
 	}
 
