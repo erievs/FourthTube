@@ -129,37 +129,7 @@ Result_with_string Util_converter_yuv422_to_yuv420p(u8 *yuv422, u8 **yuv420p, in
 }
 
 Result_with_string Util_converter_yuv420p_to_bgr565(u8 *yuv420p, u8 **bgr565, int width, int height) {
-	int index = 0;
-	u8 *ybase = yuv420p;
-	u8 *ubase = yuv420p + width * height;
-	u8 *vbase = yuv420p + width * height + width * height / 4;
-	Result_with_string result;
-
-	*bgr565 = (u8 *)malloc(width * height * 2);
-	if (*bgr565 == NULL) {
-		result.code = DEF_ERR_OUT_OF_MEMORY;
-		result.string = DEF_ERR_OUT_OF_MEMORY_STR;
-		return result;
-	}
-
-	u8 Y[4], U, V, r[4], g[4], b[4];
-	for (int y = 0; y < height; y++) {
-		for (int x = 0; x < width; x++) {
-			// YYYYYYYYUUVV
-			Y[0] = ybase[x + y * width];
-			U = ubase[y / 2 * width / 2 + (x / 2)];
-			V = vbase[y / 2 * width / 2 + (x / 2)];
-			b[0] = YUV2B(Y[0], U);
-			g[0] = YUV2G(Y[0], U, V);
-			r[0] = YUV2R(Y[0], V);
-			b[0] = b[0] >> 3;
-			g[0] = g[0] >> 2;
-			r[0] = r[0] >> 3;
-			*(*bgr565 + index++) = (g[0] & 0b00000111) << 5 | b[0];
-			*(*bgr565 + index++) = (g[0] & 0b00111000) >> 3 | (r[0] & 0b00011111) << 3;
-		}
-	}
-	return result;
+	return Util_converter_yuv420p_to_bgr565_asm(yuv420p, bgr565, width, height);
 }
 
 Result_with_string Util_converter_yuv420p_to_bgr565_asm(u8 *yuv420p, u8 **bgr565, int width, int height) {
@@ -167,6 +137,7 @@ Result_with_string Util_converter_yuv420p_to_bgr565_asm(u8 *yuv420p, u8 **bgr565
 
 	*bgr565 = (u8 *)malloc(width * height * 2);
 	if (*bgr565 == NULL) {
+		logger.warning("converter", "bgr565 allocation failed for size: " + std::to_string(width * height * 2));
 		result.code = DEF_ERR_OUT_OF_MEMORY;
 		result.string = DEF_ERR_OUT_OF_MEMORY_STR;
 		return result;
@@ -177,33 +148,7 @@ Result_with_string Util_converter_yuv420p_to_bgr565_asm(u8 *yuv420p, u8 **bgr565
 }
 
 Result_with_string Util_converter_yuv420p_to_bgr888(u8 *yuv420p, u8 **bgr888, int width, int height) {
-	int index = 0;
-	u8 *ybase = yuv420p;
-	u8 *ubase = yuv420p + width * height;
-	u8 *vbase = yuv420p + width * height + width * height / 4;
-	Result_with_string result;
-
-	*bgr888 = (u8 *)malloc(width * height * 3);
-	if (*bgr888 == NULL) {
-		result.code = DEF_ERR_OUT_OF_MEMORY;
-		result.string = DEF_ERR_OUT_OF_MEMORY_STR;
-		return result;
-	}
-
-	u8 Y[4], U, V;
-	for (int y = 0; y < height; y++) {
-		for (int x = 0; x < width; x++) {
-			// YYYYYYYYUUVV
-			Y[0] = *ybase++;
-			U = ubase[y / 2 * width / 2 + (x / 2)];
-			V = vbase[y / 2 * width / 2 + (x / 2)];
-
-			*(*bgr888 + index++) = YUV2B(Y[0], U);
-			*(*bgr888 + index++) = YUV2G(Y[0], U, V);
-			*(*bgr888 + index++) = YUV2R(Y[0], V);
-		}
-	}
-	return result;
+	return Util_converter_yuv420p_to_bgr888_asm(yuv420p, bgr888, width, height);
 }
 
 Result_with_string Util_converter_yuv420p_to_bgr888_asm(u8 *yuv420p, u8 **bgr888, int width, int height) {
@@ -211,6 +156,7 @@ Result_with_string Util_converter_yuv420p_to_bgr888_asm(u8 *yuv420p, u8 **bgr888
 
 	*bgr888 = (u8 *)malloc(width * height * 3);
 	if (*bgr888 == NULL) {
+		logger.warning("converter", "bgr888 allocation failed for size: " + std::to_string(width * height * 3));
 		result.code = DEF_ERR_OUT_OF_MEMORY;
 		result.string = DEF_ERR_OUT_OF_MEMORY_STR;
 		return result;

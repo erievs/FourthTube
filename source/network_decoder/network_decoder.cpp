@@ -658,33 +658,47 @@ Result_with_string NetworkDecoder::init_decoder(int type) {
 	}
 
 	if ((is_av_separate() ? (type == VIDEO) : (type == BOTH))) {
-		decoder_context[type]->lowres = 0;
-		decoder_context[type]->flags = AV_CODEC_FLAG_OUTPUT_CORRUPT;
+		decoder_context[type]->flags = AV_CODEC_FLAG_OUTPUT_CORRUPT | AV_CODEC_FLAG_LOW_DELAY;
+		decoder_context[type]->flags2 |= AV_CODEC_FLAG2_FAST;
 
-		if (codec[type]->capabilities & AV_CODEC_CAP_FRAME_THREADS) {
-			decoder_context[type]->thread_type = FF_THREAD_FRAME;
-		} else if (codec[type]->capabilities & AV_CODEC_CAP_SLICE_THREADS) {
-			decoder_context[type]->thread_type = FF_THREAD_SLICE;
-		} else {
+		if (!var_is_new3ds) {
+			decoder_context[type]->skip_frame = AVDISCARD_NONREF;
+			decoder_context[type]->skip_idct = AVDISCARD_NONREF;
+			decoder_context[type]->skip_loop_filter = AVDISCARD_ALL;
+			decoder_context[type]->flags2 |= AV_CODEC_FLAG2_CHUNKS | AV_CODEC_FLAG2_SHOW_ALL;
 			decoder_context[type]->thread_type = 0;
-		}
-
-		if (decoder_context[type]->thread_type == FF_THREAD_FRAME) {
-			Util_fake_pthread_set_enabled_core(frame_cores_enabled);
-			decoder_context[type]->thread_count =
-			    std::accumulate(std::begin(frame_cores_enabled), std::end(frame_cores_enabled), 0);
-		} else if (decoder_context[type]->thread_type == FF_THREAD_SLICE) {
-			Util_fake_pthread_set_enabled_core(slice_cores_enabled);
-			decoder_context[type]->thread_count =
-			    std::accumulate(std::begin(slice_cores_enabled), std::end(slice_cores_enabled), 0);
-		} else {
 			decoder_context[type]->thread_count = 1;
+		} else {
+			if (codec[type]->capabilities & AV_CODEC_CAP_FRAME_THREADS) {
+				decoder_context[type]->thread_type = FF_THREAD_FRAME;
+			} else if (codec[type]->capabilities & AV_CODEC_CAP_SLICE_THREADS) {
+				decoder_context[type]->thread_type = FF_THREAD_SLICE;
+			} else {
+				decoder_context[type]->thread_type = 0;
+			}
+
+			if (decoder_context[type]->thread_type == FF_THREAD_FRAME) {
+				Util_fake_pthread_set_enabled_core(frame_cores_enabled);
+				decoder_context[type]->thread_count =
+				    std::accumulate(std::begin(frame_cores_enabled), std::end(frame_cores_enabled), 0);
+			} else if (decoder_context[type]->thread_type == FF_THREAD_SLICE) {
+				Util_fake_pthread_set_enabled_core(slice_cores_enabled);
+				decoder_context[type]->thread_count =
+				    std::accumulate(std::begin(slice_cores_enabled), std::end(slice_cores_enabled), 0);
+			} else {
+				decoder_context[type]->thread_count = 1;
+			}
 		}
 	}
 	ffmpeg_result = avcodec_open2(decoder_context[type], codec[type], NULL);
 	if (ffmpeg_result != 0) {
 		result.error_description = "avcodec_open2() failed " + std::to_string(ffmpeg_result);
 		goto fail;
+	}
+
+	if (!var_is_new3ds && (is_av_separate() ? (type == VIDEO) : (type == BOTH))) {
+		decoder_context[type]->error_concealment = 0;
+		decoder_context[type]->idct_algo = FF_IDCT_SIMPLE;
 	}
 
 	if (type == AUDIO) {
