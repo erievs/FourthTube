@@ -160,6 +160,37 @@ int thumbnail_get_status_code(int handle) {
 	return thumbnail_get_status_code(requests[handle].url);
 }
 
+void thumbnail_get_dimensions(int handle, int *width, int *height) {
+	if (handle == -1) {
+		if (width) {
+			*width = 0;
+		}
+		if (height) {
+			*height = 0;
+		}
+		return;
+	}
+	resource_lock.lock();
+	std::string url = requests[handle].url;
+	if (requested_urls.count(url) && requested_urls[url].is_loaded) {
+		LoadedThumbnail &thumbnail = requested_urls[url].data;
+		if (width) {
+			*width = thumbnail.image_width;
+		}
+		if (height) {
+			*height = thumbnail.image_height;
+		}
+	} else {
+		if (width) {
+			*width = 0;
+		}
+		if (height) {
+			*height = 0;
+		}
+	}
+	resource_lock.unlock();
+}
+
 bool thumbnail_draw(int handle, int x_offset, int y_offset, int x_len, int y_len) {
 	if (handle == -1) {
 		return false;

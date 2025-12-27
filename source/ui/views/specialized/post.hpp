@@ -21,10 +21,10 @@ struct TimestampInfo {
 	int end_pos;
 	double seconds;
 	bool is_holding;
-	
+
 	TimestampInfo() : line_index(-1), start_pos(-1), end_pos(-1), seconds(-1.0), is_holding(false) {}
-	TimestampInfo(int line, int start, int end, double sec) 
-		: line_index(line), start_pos(start), end_pos(end), seconds(sec), is_holding(false) {}
+	TimestampInfo(int line, int start, int end, double sec)
+	    : line_index(line), start_pos(start), end_pos(end), seconds(sec), is_holding(false) {}
 };
 
 struct PostView : public FixedWidthView {
@@ -53,17 +53,17 @@ struct PostView : public FixedWidthView {
 
 	// position-related functions
 	inline float get_icon_size() const { return is_reply ? REPLY_ICON_SIZE : POST_ICON_SIZE; }
-	float content_x_pos() const { 
+	float content_x_pos() const {
 		if (is_description_mode) {
 			return x0 + SMALL_MARGIN;
 		}
-		return x0 + SMALL_MARGIN * 2 + get_icon_size(); 
+		return x0 + SMALL_MARGIN * 2 + get_icon_size();
 	}
-	float left_height() const { 
+	float left_height() const {
 		if (is_description_mode) {
 			return 0;
 		}
-		return get_icon_size() + SMALL_MARGIN; 
+		return get_icon_size() + SMALL_MARGIN;
 	}
 	float right_height() const {
 		float res = DEFAULT_FONT_INTERVAL * (is_description_mode ? lines_shown : 1 + lines_shown);
@@ -81,7 +81,7 @@ struct PostView : public FixedWidthView {
 	size_t lines_shown = 0; // 3 + 50n
 	size_t replies_shown = 0;
 	bool is_reply = false;
-	bool is_description_mode = false;  // For video description display without icon/author
+	bool is_description_mode = false; // For video description display without icon/author
 	bool disable_timestamps = false;  // Disable timestamp parsing for community posts
 	volatile bool is_loading_replies = false;
 
@@ -144,34 +144,10 @@ struct PostView : public FixedWidthView {
 			additional_video_view->on_scroll();
 		}
 	}
-	float get_height() const override {
-		float main_height = std::max(left_height(), right_height());
-		
-		// Skip community post features in description mode
-		if (!is_description_mode) {
-			if (additional_image_url != "") {
-				main_height += SMALL_MARGIN * 2 + COMMUNITY_IMAGE_SIZE;
-			}
-			if (additional_video_view) {
-				main_height += additional_video_view->get_height() + SMALL_MARGIN * 2;
-			}
-			main_height += 16 + SMALL_MARGIN * 2; // upvote icon/str
-			float reply_height = 0;
-			if (replies_shown) {
-				reply_height += SMALL_MARGIN + DEFAULT_FONT_INTERVAL + SMALL_MARGIN; // hide replies
-			}
-			for (size_t i = 0; i < replies_shown; i++) {
-				reply_height += replies[i]->get_height();
-			}
-			if (get_has_more_replies() || replies_shown < replies.size()) {
-				reply_height += SMALL_MARGIN + DEFAULT_FONT_INTERVAL; // load more replies
-			}
-			main_height += reply_height;
-		}
+	float get_height() const override;
+	float get_image_draw_height() const;
 
-		return main_height + SMALL_MARGIN; // add margin between comments
-	}
-	float get_self_height() { 
+	float get_self_height() {
 		float height = std::max(left_height(), right_height());
 		if (!is_description_mode) {
 			height += 16 + SMALL_MARGIN * 2;
@@ -181,12 +157,12 @@ struct PostView : public FixedWidthView {
 
 	std::vector<std::pair<float, PostView *>> get_reply_pos_list() {
 		std::vector<std::pair<float, PostView *>> res;
-		
+
 		// Return empty list for description mode (no replies)
 		if (is_description_mode) {
 			return res;
 		}
-		
+
 		float cur_y = std::max(left_height(), right_height());
 		cur_y += 16 + SMALL_MARGIN * 2;
 		if (replies_shown) {

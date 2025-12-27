@@ -55,6 +55,7 @@ void PostView::draw_() const {
 	if (!is_description_mode) {
 		if (additional_image_url != "") {
 			cur_y += SMALL_MARGIN;
+			int image_height = get_image_draw_height();
 			int thumbnail_status_code = thumbnail_get_status_code(additional_image_handle);
 			if (!thumbnail_is_available(additional_image_handle) &&
 			    (thumbnail_status_code / 100 == 2 || thumbnail_status_code == 0)) {
@@ -64,10 +65,10 @@ void PostView::draw_() const {
 				Draw_x_centered(LOCALIZED(UNSUPPORTED_IMAGE), content_x_pos(), content_x_pos() + COMMUNITY_IMAGE_SIZE,
 				                cur_y + COMMUNITY_IMAGE_SIZE * 0.3, 0.5, 0.5, DEFAULT_TEXT_COLOR);
 			} else {
-				thumbnail_draw(additional_image_handle, content_x_pos(), cur_y, COMMUNITY_IMAGE_SIZE,
-				               COMMUNITY_IMAGE_SIZE);
+				thumbnail_draw(additional_image_handle, content_x_pos(), cur_y, COMMUNITY_IMAGE_SIZE, // Width fixed
+				               image_height);                                                         // Height dynamic
 			}
-			cur_y += COMMUNITY_IMAGE_SIZE + SMALL_MARGIN;
+			cur_y += image_height + SMALL_MARGIN;
 		}
 		if (additional_video_view) {
 			cur_y += SMALL_MARGIN;
@@ -162,7 +163,7 @@ void PostView::update_(Hid_info key) {
 		cur_y = std::max<int>(cur_y, y0 + get_icon_size() + SMALL_MARGIN);
 
 		if (additional_image_url != "") {
-			cur_y += COMMUNITY_IMAGE_SIZE + SMALL_MARGIN * 2;
+			cur_y += get_image_draw_height() + SMALL_MARGIN * 2;
 		}
 		if (additional_video_view) {
 			cur_y += SMALL_MARGIN;
@@ -365,4 +366,45 @@ void PostView::handle_timestamp_touch(Hid_info key, size_t line_index, float lin
 			timestamp.is_holding = false;
 		}
 	}
+}
+
+float PostView::get_image_draw_height() const {
+	if (additional_image_url == "") {
+		return 0;
+	}
+	int w = 0, h = 0;
+	thumbnail_get_dimensions(additional_image_handle, &w, &h);
+	if (w > 0 && h > 0) {
+		float aspect = (float)w / h;
+		return COMMUNITY_IMAGE_SIZE / aspect;
+	}
+	return COMMUNITY_IMAGE_SIZE;
+}
+
+float PostView::get_height() const {
+	float main_height = std::max(left_height(), right_height());
+
+	// Skip community post features in description mode
+	if (!is_description_mode) {
+		if (additional_image_url != "") {
+			main_height += SMALL_MARGIN * 2 + get_image_draw_height();
+		}
+		if (additional_video_view) {
+			main_height += additional_video_view->get_height() + SMALL_MARGIN * 2;
+		}
+		main_height += 16 + SMALL_MARGIN * 2; // upvote icon/str
+		float reply_height = 0;
+		if (replies_shown) {
+			reply_height += SMALL_MARGIN + DEFAULT_FONT_INTERVAL + SMALL_MARGIN; // hide replies
+		}
+		for (size_t i = 0; i < replies_shown; i++) {
+			reply_height += replies[i]->get_height();
+		}
+		if (get_has_more_replies() || replies_shown < replies.size()) {
+			reply_height += SMALL_MARGIN + DEFAULT_FONT_INTERVAL; // load more replies
+		}
+		main_height += reply_height;
+	}
+
+	return main_height + SMALL_MARGIN; // add margin between comments
 }
