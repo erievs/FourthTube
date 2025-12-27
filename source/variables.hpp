@@ -47,6 +47,7 @@ extern int var_free_ram;
 extern int var_free_linear_ram;
 extern int var_lcd_brightness;
 extern int var_time_to_turn_off_lcd;
+extern int var_screen_off_mode;
 extern int var_num_of_app_start;
 extern int var_system_region;
 extern bool var_is_new3ds;

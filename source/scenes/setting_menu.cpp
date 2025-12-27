@@ -503,6 +503,20 @@ void Sem_init(void) {
 							var_time_to_turn_off_lcd = view.get_value() <= 309 ? view.get_value() : 0;
 							misc_tasks_request(TASK_SAVE_SETTINGS);
 						}),
+					// Screen Toggle Mode
+					(new SelectorView(0, 0, 320, 35, false))
+						->set_texts({
+							(std::function<std::string ()>) []() { return LOCALIZED(SCREEN_TOGGLE_BOTTOM); },
+							(std::function<std::string ()>) []() { return LOCALIZED(SCREEN_TOGGLE_TOP); },
+							(std::function<std::string ()>) []() { return LOCALIZED(SCREEN_TOGGLE_BOTH); }
+						}, var_screen_off_mode)
+						->set_title([](const SelectorView &) { return LOCALIZED(SCREEN_TOGGLE_MODE); })
+						->set_on_change([](const SelectorView &view) {
+							if (var_screen_off_mode != view.selected_button) {
+								var_screen_off_mode = view.selected_button;
+								misc_tasks_request(TASK_SAVE_SETTINGS);
+							}
+						}),
 					// full screen mode
 					(new SelectorView(0, 0, 320, 35, true))
 						->set_texts({

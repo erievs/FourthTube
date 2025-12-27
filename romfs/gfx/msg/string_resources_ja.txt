@@ -145,4 +145,8 @@
 <OAUTH_WAITING>認証を待機中...</OAUTH_WAITING>
 <OAUTH_TIMEOUT>認証がタイムアウトしました</OAUTH_TIMEOUT>
 <OAUTH_LOGIN_INSTRUCTION>1. ウェブブラウザを開く\n2. 表示されたURLにアクセス\n3. デバイスコードを入力\n4. アプリを承認</OAUTH_LOGIN_INSTRUCTION>
-<OAUTH_TOKEN_WARNING>oauth_tokensファイルは絶対に\n他人と共有しないでください。\nこのファイルには、あなたのYouTube\nアカウントへのアクセス権限が含まれます。</OAUTH_TOKEN_WARNING>
+<OAUTH_TOKEN_WARNING>oauth_tokensファイルを他人に\n共有しないでください。このファイルにはYouTube\nアカウントへのアクセス資格情報が含まれています。</OAUTH_TOKEN_WARNING>
+<SCREEN_TOGGLE_MODE>オフにする画面</SCREEN_TOGGLE_MODE>
+<SCREEN_TOGGLE_BOTTOM>下</SCREEN_TOGGLE_BOTTOM>
+<SCREEN_TOGGLE_TOP>上</SCREEN_TOGGLE_TOP>
+<SCREEN_TOGGLE_BOTH>両方</SCREEN_TOGGLE_BOTH>

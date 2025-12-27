@@ -24,7 +24,7 @@ static Thread menu_worker_thread, thumbnail_downloader_thread, async_task_thread
 
 static void empty_thread(void *arg) { threadExit(0); }
 
-bool bot_screen_disabled = false;
+bool manual_screen_off = false;
 
 static Result sound_init_result;
 }; // namespace SceneSwitcher
@@ -324,7 +324,7 @@ bool Menu_main(void) {
 		var_need_refresh = true;
 	}
 	if (((key.h_select && key.p_start) || (key.h_start && key.p_select)) && var_model != CFG_MODEL_2DS) {
-		bot_screen_disabled = !bot_screen_disabled;
+		manual_screen_off = !manual_screen_off;
 	}
 
 	if (global_intent.next_scene == SceneType::EXIT) {
@@ -469,44 +469,78 @@ void Menu_worker_thread(void *arg) {
 
 		static bool cur_screen_on = true;
 		static bool cur_screen_dimmed = false;
-		static bool cur_bot_screen_disabled = false;
-		bool next_screen_on;
-		bool next_screen_dimmed = cur_screen_dimmed;
-		bool next_bot_screen_disabled = bot_screen_disabled && !var_app_suspended;
+		// track manual off state for top and bottom separately to detect changes
+		static bool cur_top_manual_off = false;
+		static bool cur_bot_manual_off = false;
 
+		bool next_screen_dimmed = cur_screen_dimmed;
+
+		// Determine which screens should be turned off based on mode
+		// Mode 0: Bottom, Mode 1: Top, Mode 2: Both
+		bool allowed_top_off = (var_screen_off_mode == 1 || var_screen_off_mode == 2);
+		bool allowed_bot_off = (var_screen_off_mode == 0 || var_screen_off_mode == 2);
+
+		// Manual off logic
+		bool top_off_manual = manual_screen_off && (var_screen_off_mode == 1 || var_screen_off_mode == 2);
+		bool bot_off_manual = manual_screen_off && (var_screen_off_mode == 0 || var_screen_off_mode == 2);
+
+		// System handles sleep if app is suspended
+		bool next_top_manual_off = top_off_manual && !var_app_suspended;
+		bool next_bot_manual_off = bot_off_manual && !var_app_suspended;
+
+		bool idle_off_requested = false;
 		if (var_time_to_turn_off_lcd != 0 && var_afk_time > var_time_to_turn_off_lcd) {
-			next_screen_on = false;
+			idle_off_requested = true;
+			next_screen_dimmed = false;
 		} else if (var_time_to_turn_off_lcd != 0 &&
 		           var_afk_time > std::max<float>(var_time_to_turn_off_lcd * 0.5, (var_time_to_turn_off_lcd - 10))) {
-			next_screen_on = true, next_screen_dimmed = true;
+			idle_off_requested = false;
+			next_screen_dimmed = true;
 		} else {
-			next_screen_on = true, next_screen_dimmed = false;
+			idle_off_requested = false;
+			next_screen_dimmed = false;
 		}
 
-		if (cur_screen_on != next_screen_on || cur_screen_dimmed != next_screen_dimmed ||
-		    cur_bot_screen_disabled != next_bot_screen_disabled) {
-			// first handle on/off
-			bool cur_top_on = cur_screen_on;
-			bool cur_bot_on = cur_screen_on && !cur_bot_screen_disabled;
-			bool next_top_on = next_screen_on;
-			bool next_bot_on = next_screen_on && !next_bot_screen_disabled;
-			if (cur_top_on == cur_bot_on && cur_top_on != next_top_on && cur_bot_on != next_bot_on) {
-				Util_cset_set_screen_state(false, true, next_top_on); // change both
+		// Idle off logic (respects screen off mode)
+		bool next_top_idle_off = idle_off_requested && allowed_top_off;
+		bool next_bot_idle_off = idle_off_requested && allowed_bot_off;
+
+		// Final screen state: ON if neither manually off nor idle off
+		bool next_top_on = !next_top_manual_off && !next_top_idle_off;
+		bool next_bot_on = !next_bot_manual_off && !next_bot_idle_off;
+
+		// We track the applied state to detect changes
+		static bool cur_top_applied_on = true;
+		static bool cur_bot_applied_on = true;
+
+		if (cur_top_applied_on != next_top_on || cur_bot_applied_on != next_bot_on ||
+		    cur_screen_dimmed != next_screen_dimmed || cur_top_manual_off != next_top_manual_off ||
+		    cur_bot_manual_off != next_bot_manual_off) {
+
+			// Handle screen power
+			if (cur_top_applied_on == cur_bot_applied_on && cur_top_applied_on != next_top_on &&
+			    cur_bot_applied_on != next_bot_on) {
+				Util_cset_set_screen_state(true, true, next_top_on);
 			} else {
-				if (cur_top_on != next_top_on) {
+				if (cur_top_applied_on != next_top_on) {
 					Util_cset_set_screen_state(true, false, next_top_on);
 				}
-				if (cur_bot_on != next_bot_on) {
+				if (cur_bot_applied_on != next_bot_on) {
 					Util_cset_set_screen_state(false, true, next_bot_on);
 				}
 			}
 
+			// Handle dimming
 			if (cur_screen_dimmed != next_screen_dimmed) {
-				Util_cset_set_screen_brightness(false, true, next_screen_dimmed ? 10 : var_lcd_brightness);
+				Util_cset_set_screen_brightness(allowed_top_off, allowed_bot_off,
+				                                next_screen_dimmed ? 10 : var_lcd_brightness);
 			}
-			cur_screen_on = next_screen_on;
+
+			cur_top_applied_on = next_top_on;
+			cur_bot_applied_on = next_bot_on;
 			cur_screen_dimmed = next_screen_dimmed;
-			cur_bot_screen_disabled = next_bot_screen_disabled;
+			cur_top_manual_off = next_top_manual_off;
+			cur_bot_manual_off = next_bot_manual_off;
 		}
 	}
 	logger.info(DEF_MENU_WORKER_THREAD_STR, "Thread exit.");
