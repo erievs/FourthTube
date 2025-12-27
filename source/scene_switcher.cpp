@@ -46,7 +46,6 @@ void Menu_init(void) {
 	logger.info(DEF_MENU_INIT_STR, "Initializing...");
 	logger.info(DEF_MENU_INIT_STR, "Version is \"" + DEF_CURRENT_APP_VER + "\"");
 
-
 	osSetSpeedupEnable(true);
 	svcSetThreadPriority(CUR_THREAD_HANDLE, DEF_THREAD_PRIORITY_HIGH - 1);
 
@@ -464,7 +463,9 @@ void Menu_worker_thread(void *arg) {
 			count = 0;
 		}
 
-		var_afk_time += 0.05;
+		if (var_time_to_turn_off_lcd != 0) {
+			var_afk_time += 0.05;
+		}
 
 		static bool cur_screen_on = true;
 		static bool cur_screen_dimmed = false;
@@ -473,9 +474,10 @@ void Menu_worker_thread(void *arg) {
 		bool next_screen_dimmed = cur_screen_dimmed;
 		bool next_bot_screen_disabled = bot_screen_disabled && !var_app_suspended;
 
-		if (var_afk_time > var_time_to_turn_off_lcd) {
+		if (var_time_to_turn_off_lcd != 0 && var_afk_time > var_time_to_turn_off_lcd) {
 			next_screen_on = false;
-		} else if (var_afk_time > std::max<float>(var_time_to_turn_off_lcd * 0.5, (var_time_to_turn_off_lcd - 10))) {
+		} else if (var_time_to_turn_off_lcd != 0 &&
+		           var_afk_time > std::max<float>(var_time_to_turn_off_lcd * 0.5, (var_time_to_turn_off_lcd - 10))) {
 			next_screen_on = true, next_screen_dimmed = true;
 		} else {
 			next_screen_on = true, next_screen_dimmed = false;

@@ -415,7 +415,17 @@ static void oauth_worker_thread_func(void *) {
 	threadExit(0);
 }
 
+namespace {
+	const std::vector<std::string> languages_ui = {"en", "ja", "de", "fr", "it", "es"};
+	const std::vector<std::string> languages_content = {"en", "ja", "de", "fr", "it", "es"};
 
+	int get_language_index(const std::vector<std::string>& codes, const std::string& lang) {
+		for (size_t i = 0; i < codes.size(); ++i) {
+			if (codes[i] == lang) return i;
+		}
+		return 0;
+	}
+}
 
 void Sem_init(void) {
 	logger.info("settings/init", "Initializing...");
@@ -439,17 +449,19 @@ void Sem_init(void) {
 			(new ScrollView(0, 0, 320, 0))
 				->set_views({
 					// UI language
-					(new SelectorView(0, 0, 320, 35, false))
+					(new GridSelectorView(0, 0, 320, 70, false))
 						->set_texts({
 							"English",
 							"日本語",
 							"Deutsch",
 							"Français",
-							"Italiano"
-						}, var_lang == "ja" ? 1 : var_lang == "de" ? 2 : var_lang == "fr" ? 3 : var_lang == "it" ? 4 : 0)
-						->set_title([](const SelectorView &) { return LOCALIZED(UI_LANGUAGE); })
-						->set_on_change([](const SelectorView &view) {
-							auto next_lang = std::vector<std::string>{"en", "ja", "de", "fr", "it"}[view.selected_button];
+							"Italiano",
+							"Español"
+						}, get_language_index(languages_ui, var_lang))
+						->set_row_counts({3, 3})
+						->set_title([](const GridSelectorView &) { return LOCALIZED(UI_LANGUAGE); })
+						->set_on_change([](const GridSelectorView &view) {
+							auto next_lang = languages_ui[view.selected_button];
 							if (var_lang != next_lang) {
 								var_lang = next_lang;
 								misc_tasks_request(TASK_RELOAD_STRING_RESOURCE);
@@ -457,17 +469,19 @@ void Sem_init(void) {
 							}
 						}),
 					// Content language
-					(new SelectorView(0, 0, 320, 35, false))
+					(new GridSelectorView(0, 0, 320, 70, false))
 						->set_texts({
 							"English",
 							"日本語",
 							"Deutsch",
 							"Français",
-							"Italiano"
-						}, var_lang_content == "ja" ? 1 : var_lang_content == "de" ? 2 : var_lang_content == "fr" ? 3 : var_lang_content == "it" ? 4 : 0)
-						->set_title([](const SelectorView &) { return LOCALIZED(CONTENT_LANGUAGE); })
-						->set_on_change([](const SelectorView &view) {
-							auto next_lang = std::vector<std::string>{"en", "ja", "de", "fr", "it"}[view.selected_button];
+							"Italiano",
+							"Español"
+						}, get_language_index(languages_content, var_lang_content))
+						->set_row_counts({3, 3})
+						->set_title([](const GridSelectorView &) { return LOCALIZED(CONTENT_LANGUAGE); })
+						->set_on_change([](const GridSelectorView &view) {
+							auto next_lang = languages_content[view.selected_button];
 							if (var_lang_content != next_lang) {
 								var_lang_content = next_lang;
 								misc_tasks_request(TASK_SAVE_SETTINGS);
@@ -482,11 +496,11 @@ void Sem_init(void) {
 						->set_on_release([] (const BarView &view) { misc_tasks_request(TASK_SAVE_SETTINGS); }),
 					// Time to turn off LCD
 					(new BarView(0, 0, 320, 40))
-						->set_values(10, 310, var_time_to_turn_off_lcd <= 309 ? var_time_to_turn_off_lcd : 310)
+						->set_values(10, 310, var_time_to_turn_off_lcd != 0 && var_time_to_turn_off_lcd <= 309 ? var_time_to_turn_off_lcd : 310)
 						->set_title([] (const BarView &view) { return LOCALIZED(TIME_TO_TURN_OFF_LCD) + " : " +
 							(view.get_value() <= 309 ? std::to_string((int) view.get_value()) + " " + LOCALIZED(SECONDS) : LOCALIZED(NEVER_TURN_OFF)); })
 						->set_on_release([] (const BarView &view) {
-							var_time_to_turn_off_lcd = view.get_value() <= 309 ? view.get_value() : 1000000000;
+							var_time_to_turn_off_lcd = view.get_value() <= 309 ? view.get_value() : 0;
 							misc_tasks_request(TASK_SAVE_SETTINGS);
 						}),
 					// full screen mode

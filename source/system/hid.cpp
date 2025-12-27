@@ -27,7 +27,7 @@ void Util_hid_update_key_state() {
 
 void Util_hid_query_key_state(Hid_info *out_key_state) {
 	if (key_down | key_held) {
-		if (var_afk_time > var_time_to_turn_off_lcd) {
+		if (var_time_to_turn_off_lcd != 0 && var_afk_time > var_time_to_turn_off_lcd) {
 			key_down = 0; // the tap to awake the lcd should be ignored in most cases
 		}
 		var_afk_time = 0;

@@ -16,7 +16,7 @@
 <ALL_HISTORY_REMOVED>Historial eliminado</ALL_HISTORY_REMOVED>
 <SECONDS>s</SECONDS>
 <GENERAL>General</GENERAL>
-<SUGGESTIONS>Sugerecias</SUGGESTIONS>
+<SUGGESTIONS>Sugerencias</SUGGESTIONS>
 <COMMENTS>Comentarios</COMMENTS>
 <CAPTIONS>Subtítulos</CAPTIONS>
 <PLAYBACK>Reproducción</PLAYBACK>
@@ -25,7 +25,7 @@
 <RELOAD>Recargar</RELOAD>
 <RETRY>Reintentar</RETRY>
 <CLOSE>Cerrar</CLOSE>
-<RESET>Reinciar</RESET>
+<RESET>Reiniciar</RESET>
 <VIDEO>Video</VIDEO>
 <COMMUNITY>Publicaciones</COMMUNITY>
 <CUR_PLAYING_VIDEO>En reproducción:</CUR_PLAYING_VIDEO>
@@ -66,7 +66,7 @@
 <YOUTUBE_DISLIKE>No me gusta</YOUTUBE_DISLIKE>
 <SUBSCRIBE>Suscribirse</SUBSCRIBE>
 <SUBSCRIBED>Suscrito</SUBSCRIBED>
-<SUBSCRIBER_COUNT>%0 Suscriptores</SUBSCRIBER_COUNT>
+<SUBSCRIBER_COUNT>%0 suscriptores</SUBSCRIBER_COUNT>
 <UNSUBSCRIBE>Desuscribirse</UNSUBSCRIBE> --- UNUSED ----
 <SUBSCRIBED_CHANNELS>Suscripciones</SUBSCRIBED_CHANNELS>
 <SUBSCRIPTION>Suscripción</SUBSCRIPTION>
@@ -83,7 +83,7 @@
 <UPDATE>Actualizar</UPDATE>
 <CHECKING_FOR_UPDATES>Comprobando si hay nuevas actualizaciones...</CHECKING_FOR_UPDATES>
 <FAILED_CHECKING_UPDATES>Fallo al comprobar por nuevas actualizaciones</FAILED_CHECKING_UPDATES>
-<APP_UP_TO_DATE>La aplicación esta actualizada</APP_UP_TO_DATE>
+<APP_UP_TO_DATE>La aplicación está actualizada</APP_UP_TO_DATE>
 <UPDATES_AVAILABLE>Actualización disponible</UPDATES_AVAILABLE>
 <OVERWRITE_3DSX_CONFIRM>Nota : %0 será sobrescrito</OVERWRITE_3DSX_CONFIRM>
 <INSTALL_CIA_CONFIRM>La operación instalará .cia</INSTALL_CIA_CONFIRM>
@@ -103,46 +103,46 @@
 <PLAYLIST_SHORT>Lista</PLAYLIST_SHORT>
 <SETTINGS_DISPLAY_UI>Pantalla/IU</SETTINGS_DISPLAY_UI>
 <SETTINGS_DATA>Datos</SETTINGS_DATA>
-<SETTINGS_ADVANCED>Avanzado/SETTINGS_ADVANCED>
-<UI_LANGUAGE>Idioma de  la IU</UI_LANGUAGE>
+<SETTINGS_ADVANCED>Avanzado</SETTINGS_ADVANCED>
+<UI_LANGUAGE>Idioma de la IU</UI_LANGUAGE>
 <CONTENT_LANGUAGE>Idioma del contenido</CONTENT_LANGUAGE>
 <LCD_BRIGHTNESS>Brillo de la pantalla</LCD_BRIGHTNESS>
 <TIME_TO_TURN_OFF_LCD>Tiempo de inactividad para suspender la pantalla</TIME_TO_TURN_OFF_LCD>
 <NEVER_TURN_OFF>No suspender</NEVER_TURN_OFF>
 <ECO_MODE>Modo Eco</ECO_MODE>
 <FULL_SCREEN_MODE>Modo pantalla completa</FULL_SCREEN_MODE>
-<SHOW_FULL_DISLIKE>Mostrar todos los No me gusta/Like</SHOW_FULL_DISLIKE>
-<HIDE_POINTER>Hide pointer</HIDE_POINTER>
+<SHOW_FULL_DISLIKE>Mostrar todos los No me gusta</SHOW_FULL_DISLIKE>
+<HIDE_POINTER>Ocultar puntero</HIDE_POINTER>
 <DARK_THEME>Tema Oscuro</DARK_THEME>
-<DISABLE_PULL_TO_REFRESH>Disable pull-to-refresh</DISABLE_PULL_TO_REFRESH>
+<DISABLE_PULL_TO_REFRESH>Inhabilitar deslizar para refrescar</DISABLE_PULL_TO_REFRESH>
 <AUTOPLAY>Reproducción automática</AUTOPLAY>
 <LOOP>Bucle</LOOP>
 <ONLY_IN_PLAYLIST>Solo en listas de reproducción</ONLY_IN_PLAYLIST>
 <SCROLL_SPEED0>Velocidad de desplazamiento</SCROLL_SPEED0>
-<SCROLL_SPEED1>Velocidad de desplazamiento (rapida)</SCROLL_SPEED1>
-<SCROLL_SPEED_THRESHOLD>Limite de aceleración de desplazamiento</SCROLL_SPEED_THRESHOLD>
-<COMMUNITY_POST_IMAGE_SIZE>Tamaño de las imagenes en publicaciones de la comunidad</COMMUNITY_POST_IMAGE_SIZE>
+<SCROLL_SPEED1>Velocidad de desplazamiento (rápida)</SCROLL_SPEED1>
+<SCROLL_SPEED_THRESHOLD>Límite de aceleración de desplazamiento</SCROLL_SPEED_THRESHOLD>
+<COMMUNITY_POST_IMAGE_SIZE>Tamaño de las imágenes en publicaciones de la comunidad</COMMUNITY_POST_IMAGE_SIZE>
 <LINEAR_FILTER>Filtro de video lineal</LINEAR_FILTER>
 <NETWORK_FRAMEWORK>Estructura de red</NETWORK_FRAMEWORK>
 <RESTART_TO_APPLY>Restablecer para aplicar</RESTART_TO_APPLY>
 <VIDEO_SHOW_DEBUG_INFO>Mostrar información para nerds</VIDEO_SHOW_DEBUG_INFO>
 <PLAYER_RESPONSE>Datos de la aplicación para usar</PLAYER_RESPONSE>
-<INFO_DISABLE_PULL_TO_REFRESH>Disables pull-to-refresh in all tabs.\nWhen enabled, shows a reload button\nin the New tab instead.</INFO_DISABLE_PULL_TO_REFRESH>
-<INFO_ECO_MODE>Saves battery by reducing\nscreen update frequency.\nWhen enabled, the screen is\nredrawn only when content changes.</INFO_ECO_MODE>
-<INFO_PLAYER_RESPONSE>Change the spoofed client.\nAndroid VR is used when logged in,\nignoring this setting.</INFO_PLAYER_RESPONSE>
-<INFO_OAUTH>Accesses YouTube using\nAndroid VR client.\nAutomatically falls back to\nunauthenticated Android client\nif videos cannot be played,\nsuch as kids videos.</INFO_OAUTH>
-<OAUTH>YouTube Login</OAUTH>
-<OAUTH_LOGIN>Login to YouTube</OAUTH_LOGIN>
-<OAUTH_LOGOUT>Logout</OAUTH_LOGOUT>
-<OAUTH_STATUS>Login Status</OAUTH_STATUS>
-<OAUTH_NOT_AUTHENTICATED>Not logged in</OAUTH_NOT_AUTHENTICATED>
-<OAUTH_AUTHENTICATED>Logged in</OAUTH_AUTHENTICATED>
-<OAUTH_AUTHENTICATING>Authenticating...</OAUTH_AUTHENTICATING>
-<OAUTH_ERROR>Authentication error</OAUTH_ERROR>
-<OAUTH_DEVICE_CODE>Device Code</OAUTH_DEVICE_CODE>
-<OAUTH_USER_CODE>User Code: %0</OAUTH_USER_CODE>
-<OAUTH_VERIFICATION_URL>Visit: https://google.com/device</OAUTH_VERIFICATION_URL>
-<OAUTH_WAITING>Waiting for authentication...</OAUTH_WAITING>
-<OAUTH_TIMEOUT>Authentication timed out</OAUTH_TIMEOUT>
-<OAUTH_LOGIN_INSTRUCTION>1. Open a web browser\n2. Visit the URL shown\n3. Enter the device code\n4. Authorize the app</OAUTH_LOGIN_INSTRUCTION>
-<OAUTH_TOKEN_WARNING>Never share oauth_tokens file\nwith anyone. This file contains access\ncredentials to your YouTube account.</OAUTH_TOKEN_WARNING>
+<INFO_DISABLE_PULL_TO_REFRESH>Inhabilita el gesto de deslizar para refrescar en todas las pestañas.\nCuando está activado, muestra un botón de recarga\nen la pestaña "Nuevo" en su lugar.</INFO_DISABLE_PULL_TO_REFRESH>
+<INFO_ECO_MODE>Ahorra batería reduciendo la frecuencia\nde actualización de la pantalla.\nCuando está activado, la pantalla solo se\nredibuja cuando el contenido cambia.</INFO_ECO_MODE>
+<INFO_PLAYER_RESPONSE>Cambia el cliente falsificado.\nSe usa Android VR al iniciar sesión,\nignorando este ajuste.</INFO_PLAYER_RESPONSE>
+<INFO_OAUTH>Accede a YouTube usando el\ncliente Android VR.\nVuelve automáticamente al cliente Android\nsin autenticar si los videos no\nse pueden reproducir (ej. videos para niños).</INFO_OAUTH>
+<OAUTH>Inicio de sesión de YouTube</OAUTH>
+<OAUTH_LOGIN>Iniciar sesión en YouTube</OAUTH_LOGIN>
+<OAUTH_LOGOUT>Cerrar sesión</OAUTH_LOGOUT>
+<OAUTH_STATUS>Estado de la sesión</OAUTH_STATUS>
+<OAUTH_NOT_AUTHENTICATED>Sesión no iniciada</OAUTH_NOT_AUTHENTICATED>
+<OAUTH_AUTHENTICATED>Sesión iniciada</OAUTH_AUTHENTICATED>
+<OAUTH_AUTHENTICATING>Autenticando...</OAUTH_AUTHENTICATING>
+<OAUTH_ERROR>Error de autenticación</OAUTH_ERROR>
+<OAUTH_DEVICE_CODE>Código del dispositivo</OAUTH_DEVICE_CODE>
+<OAUTH_USER_CODE>Código de usuario: %0</OAUTH_USER_CODE>
+<OAUTH_VERIFICATION_URL>Visita: https://google.com/device</OAUTH_VERIFICATION_URL>
+<OAUTH_WAITING>Esperando autenticación...</OAUTH_WAITING>
+<OAUTH_TIMEOUT>Tiempo de autenticación agotado</OAUTH_TIMEOUT>
+<OAUTH_LOGIN_INSTRUCTION>1. Abre un navegador web\n2. Visita la URL mostrada\n3. Introduce el código del dispositivo\n4. Autoriza la aplicación</OAUTH_LOGIN_INSTRUCTION>
+<OAUTH_TOKEN_WARNING>Nunca compartas el archivo oauth_tokens\ncon nadie. Este archivo contiene credenciales\nde acceso a tu cuenta de YouTube.</OAUTH_TOKEN_WARNING>

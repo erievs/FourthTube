@@ -688,6 +688,8 @@ static void load_subscription_feed(void *) {
 				unit_list = {{"seconde"}, {"minute"}, {"heure"}, {"jour"}, {"semaine"}, {"mois"}, {"an"}};
 			} else if (var_lang_content == "it") {
 				unit_list = {{"second"}, {"minut"}, {"ora", "ore"}, {"giorn"}, {"settiman"}, {"mes"}, {"ann"}};
+			} else if (var_lang_content == "es") {
+				unit_list = {{"segundo"}, {"minuto"}, {"hora"}, {"día"}, {"semana"}, {"mes"}, {"año"}};
 			} else if (var_lang_content != "en") {
 				logger.error("i18n", "Units not found.");
 			}

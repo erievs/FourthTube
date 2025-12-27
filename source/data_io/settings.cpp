@@ -53,7 +53,7 @@ void load_settings() {
 		var_lcd_brightness = 100;
 	}
 	var_time_to_turn_off_lcd = load_int("time_to_turn_off_lcd", 150);
-	if (var_time_to_turn_off_lcd < 10) {
+	if (var_time_to_turn_off_lcd < 10 && var_time_to_turn_off_lcd != 0) {
 		var_time_to_turn_off_lcd = 150;
 	}
 	var_eco_mode = load_int("eco_mode", 1);
