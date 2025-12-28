@@ -891,8 +891,8 @@ NetworkDecoder::PacketType NetworkDecoder::next_decode_type() {
 
 	if (video_empty && audio_empty && video_decoded_empty) {
 		if (is_av_separate()) {
-			if ((is_stream_eof(VIDEO) || is_stream_error_or_quit(VIDEO))
-			&& (is_stream_eof(AUDIO) || is_stream_error_or_quit(AUDIO))) {
+			if ((is_stream_eof(VIDEO) || is_stream_error_or_quit(VIDEO)) &&
+			    (is_stream_eof(AUDIO) || is_stream_error_or_quit(AUDIO))) {
 				return PacketType::EoF;
 			}
 		} else {
