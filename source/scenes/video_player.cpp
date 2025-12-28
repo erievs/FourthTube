@@ -2379,9 +2379,8 @@ debug_info_view =
 
 					    // sync with sound
 					    double cur_sound_pos = Util_speaker_get_current_timestamp(0, vid_sample_rate);
-					    if (cur_sound_pos < 0) { // sound is not playing, probably because the video is lagging behind,
-						                         // so draw immediately
-					    } else {
+					    if (cur_sound_pos >= 0) { // if sound is not playing, probably because the video is lagging
+						                          // behind, draw immediately
 						    while (pts - cur_sound_pos > 0.003 && vid_play_request && !vid_seek_request &&
 						           !vid_change_video_request) {
 							    double sleep_microseconds =
