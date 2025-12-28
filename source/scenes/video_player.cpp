@@ -2382,7 +2382,7 @@ debug_info_view =
 					    if (cur_sound_pos < 0) { // sound is not playing, probably because the video is lagging behind,
 						                         // so draw immediately
 					    } else {
-						    while (pts - cur_sound_pos > 0.06 && vid_play_request && !vid_seek_request &&
+						    while (pts - cur_sound_pos > 0.003 && vid_play_request && !vid_seek_request &&
 						           !vid_change_video_request) {
 							    double sleep_microseconds =
 							        std::min(0.1, (pts - cur_sound_pos - 0.0015) / network_decoder.get_tempo()) *
