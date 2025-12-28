@@ -177,8 +177,8 @@ Result_with_string Draw_c2d_image_init(Image_data *c2d_image, int tex_size_x, in
                                        GPU_TEXCOLOR color_format) {
 	Result_with_string result;
 
-	c2d_image->subtex = (Tex3DS_SubTexture *)linearAlloc_concurrent(sizeof(Tex3DS_SubTexture *));
-	c2d_image->c2d.tex = (C3D_Tex *)linearAlloc_concurrent(sizeof(C3D_Tex *));
+	c2d_image->subtex = (Tex3DS_SubTexture *)linearAlloc_concurrent(sizeof(Tex3DS_SubTexture));
+	c2d_image->c2d.tex = (C3D_Tex *)linearAlloc_concurrent(sizeof(C3D_Tex));
 	if (c2d_image->subtex == NULL || c2d_image->c2d.tex == NULL) {
 		linearFree_concurrent(c2d_image->subtex);
 		linearFree_concurrent(c2d_image->c2d.tex);
