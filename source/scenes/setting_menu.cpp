@@ -338,11 +338,16 @@ static void oauth_worker_thread_func(void *) {
 				resource_lock.lock();
 				if (oauth_user_view) {
 					std::string user_name = OAuth::get_user_account_name();
-					std::string channel_id = OAuth::get_user_channel_id();
+					std::string handle = OAuth::get_user_handle();
+					std::string subscriber_count = OAuth::get_user_subscriber_count();
 					std::string photo_url = OAuth::get_user_photo_url();
 					
+					std::vector<std::string> aux_lines;
+					if (!handle.empty()) aux_lines.push_back(handle);
+					if (!subscriber_count.empty()) aux_lines.push_back(subscriber_count);
+					
 					oauth_user_view->set_name(user_name);
-					oauth_user_view->set_auxiliary_lines({channel_id});
+					oauth_user_view->set_auxiliary_lines(aux_lines);
 					oauth_user_view->set_thumbnail_url(photo_url);
 					oauth_user_view->set_height(CHANNEL_ICON_HEIGHT);
 					if (!photo_url.empty()) {
@@ -940,12 +945,17 @@ void Sem_init(void) {
 		var_oauth_enabled = true;
 
 		std::string user_name = OAuth::get_user_account_name();
-		std::string channel_id = OAuth::get_user_channel_id();
+		std::string handle = OAuth::get_user_handle();
+		std::string subscriber_count = OAuth::get_user_subscriber_count();
 		std::string photo_url = OAuth::get_user_photo_url();
 		
 		if (oauth_user_view && !user_name.empty()) {
+			std::vector<std::string> aux_lines;
+			if (!handle.empty()) aux_lines.push_back(handle);
+			if (!subscriber_count.empty()) aux_lines.push_back(subscriber_count);
+			
 			oauth_user_view->set_name(user_name);
-			oauth_user_view->set_auxiliary_lines({channel_id});
+			oauth_user_view->set_auxiliary_lines(aux_lines);
 			oauth_user_view->set_thumbnail_url(photo_url);
 			oauth_user_view->set_height(CHANNEL_ICON_HEIGHT);
 			if (!photo_url.empty()) {

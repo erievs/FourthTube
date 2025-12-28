@@ -23,6 +23,8 @@ extern std::string refresh_token;
 extern std::string user_account_name;
 extern std::string user_channel_id;
 extern std::string user_photo_url;
+extern std::string user_handle;
+extern std::string user_subscriber_count;
 
 void init();
 void exit();
@@ -35,6 +37,8 @@ std::string get_access_token();
 std::string get_user_account_name();
 std::string get_user_channel_id();
 std::string get_user_photo_url();
+std::string get_user_handle();
+std::string get_user_subscriber_count();
 
 void save_tokens();
 void load_tokens();
