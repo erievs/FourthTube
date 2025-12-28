@@ -2141,6 +2141,13 @@ static void decode_thread(void *arg) {
 				auto type = network_decoder.next_decode_type();
 
 				if (type == NetworkMultipleDecoder::PacketType::EoF) {
+					// wait for the audio buffer to be empty
+					if (audio_only_mode) {
+						while (!Util_speaker_is_buffer_empty(0) && vid_play_request && !vid_seek_request &&
+						       !vid_change_video_request) {
+							usleep(100000);
+						}
+					}
 					vid_pausing = true;
 					bool break_flag = false;
 					if (!eof_reached) { // the first time it reaches EOF
@@ -2353,7 +2360,7 @@ static void convert_thread(void *arg) {
 					if (cur_sound_pos < 0) { // sound is not playing, probably because the video is lagging behind,
 						                     // so draw immediately
 					} else {
-						while (pts - cur_sound_pos > 0.003 && vid_play_request && !vid_seek_request &&
+						while (pts - cur_sound_pos > 0.06 && vid_play_request && !vid_seek_request &&
 						       !vid_change_video_request) {
 							double sleep_microseconds =
 							    std::min(0.1, (pts - cur_sound_pos - 0.0015) / network_decoder.get_tempo()) * 1000000;

@@ -17,4 +17,6 @@ bool Util_speaker_is_paused(int play_ch);
 
 bool Util_speaker_is_playing(int play_ch);
 
+bool Util_speaker_is_buffer_empty(int play_ch);
+
 void Util_speaker_exit(int play_ch);
