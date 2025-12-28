@@ -55,7 +55,7 @@ struct NetworkStream {
 	std::vector<u8> get_data(u64 start, u64 size);
 
 	// this function is supposed to be called from NetworkStreamDownloader::*
-	void set_data(u64 block, const std::vector<u8> &data);
+	void set_data(u64 block, std::vector<u8> data);
 };
 
 // each instance of this class is paired with one downloader thread

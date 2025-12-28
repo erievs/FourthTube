@@ -56,9 +56,13 @@ std::vector<u8> NetworkStream::get_data(u64 start, u64 size) {
 	downloaded_data_lock.unlock();
 	return res;
 }
-void NetworkStream::set_data(u64 block, const std::vector<u8> &data) {
+
+void NetworkStream::set_data(u64 block, std::vector<u8> data) {
 	downloaded_data_lock.lock();
-	downloaded_data[block] = data;
+
+	// if you move it, it doesn't perform a copy which means you will never get a std::bad_alloc which used to happen before
+	downloaded_data[block] = std::move(data);
+
 	if (downloaded_data.size() > MAX_CACHE_BLOCKS) { // ensure it doesn't cache too much and run out of memory
 		u64 read_head_block = read_head / BLOCK_SIZE;
 		if (std::next(downloaded_data.begin())->first < read_head_block) {
@@ -348,7 +352,7 @@ void NetworkStreamDownloader::downloader_thread() {
 					continue;
 				}
 				cur_stream->retry_cnt_left = NetworkStream::RETRY_CNT_MAX;
-				cur_stream->set_data(block_reading, result.data);
+				cur_stream->set_data(block_reading, std::move(result.data)); // data isn't accessed further down so we can move it
 				cur_stream->ready = true;
 			} else if (!result.fail) {
 				logger.error("net/dl", "stream returned: " + std::to_string(result.status_code));
