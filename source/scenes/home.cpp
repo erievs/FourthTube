@@ -105,11 +105,48 @@ void Home_init(void) {
 	                              });
 
 	if (OAuth::is_authenticated()) {
-		channels_tab_view = (new TabView(0, 0, 320, 0))
-		                        ->set_views({oauth_channels_tab_view, local_channels_tab_view})
-		                        ->set_tab_texts<std::function<std::string()>>(
-		                            {[]() { return LOCALIZED(ACCOUNT); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
-		                        ->set_lr_tab_switch_enabled(false);
+		if (var_disable_pull_to_refresh) {
+			View *oauth_channels_view =
+			    (new VerticalListView(0, 0, 320))
+			        ->set_views({(new TextView(0, 0, 320, FEED_RELOAD_BUTTON_HEIGHT))
+			                         ->set_text((std::function<std::string()>)[]() {
+				                         auto res = LOCALIZED(RELOAD);
+				                         if (is_async_task_running(load_oauth_subscribed_channels)) {
+					                         res += " ...";
+				                         }
+				                         return res;
+			                         })
+			                         ->set_text_offset(SMALL_MARGIN, -1)
+			                         ->set_on_view_released([](View &) {
+				                         if (!is_async_task_running(load_oauth_subscribed_channels)) {
+					                         queue_async_task(load_oauth_subscribed_channels, NULL);
+				                         }
+			                         })
+			                         ->set_get_background_color([](const View &view) -> u32 {
+				                         if (is_async_task_running(load_oauth_subscribed_channels)) {
+					                         return LIGHT0_BACK_COLOR;
+				                         }
+				                         return View::STANDARD_BACKGROUND(view);
+			                         }),
+			                     (new RuleView(0, 0, 320, SMALL_MARGIN))
+			                         ->set_margin(0)
+			                         ->set_get_background_color([](const View &) { return DEFAULT_BACK_COLOR; }),
+			                     oauth_channels_tab_view})
+			        ->set_draw_order({2, 1, 0});
+			channels_tab_view =
+			    (new TabView(0, 0, 320, 0))
+			        ->set_views({oauth_channels_view, local_channels_tab_view})
+			        ->set_tab_texts<std::function<std::string()>>(
+			            {[]() { return LOCALIZED(ACCOUNT); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
+			        ->set_lr_tab_switch_enabled(false);
+		} else {
+			channels_tab_view =
+			    (new TabView(0, 0, 320, 0))
+			        ->set_views({oauth_channels_tab_view, local_channels_tab_view})
+			        ->set_tab_texts<std::function<std::string()>>(
+			            {[]() { return LOCALIZED(ACCOUNT); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
+			        ->set_lr_tab_switch_enabled(false);
+		}
 	} else {
 		channels_tab_view = local_channels_tab_view;
 	}
@@ -306,12 +343,48 @@ void Home_rebuild_channels_tab(void) {
 		});
 
 		if (OAuth::is_authenticated()) {
-			channels_tab_view =
-			    (new TabView(0, 0, 320, 0))
-			        ->set_views({oauth_channels_tab_view, local_channels_tab_view})
-			        ->set_tab_texts<std::function<std::string()>>(
-			            {[]() { return LOCALIZED(ACCOUNT); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
-			        ->set_lr_tab_switch_enabled(false);
+			if (var_disable_pull_to_refresh) {
+				View *oauth_channels_view =
+				    (new VerticalListView(0, 0, 320))
+				        ->set_views({(new TextView(0, 0, 320, FEED_RELOAD_BUTTON_HEIGHT))
+				                         ->set_text((std::function<std::string()>)[]() {
+					                         auto res = LOCALIZED(RELOAD);
+					                         if (is_async_task_running(load_oauth_subscribed_channels)) {
+						                         res += " ...";
+					                         }
+					                         return res;
+				                         })
+				                         ->set_text_offset(SMALL_MARGIN, -1)
+				                         ->set_on_view_released([](View &) {
+					                         if (!is_async_task_running(load_oauth_subscribed_channels)) {
+						                         queue_async_task(load_oauth_subscribed_channels, NULL);
+					                         }
+				                         })
+				                         ->set_get_background_color([](const View &view) -> u32 {
+					                         if (is_async_task_running(load_oauth_subscribed_channels)) {
+						                         return LIGHT0_BACK_COLOR;
+					                         }
+					                         return View::STANDARD_BACKGROUND(view);
+				                         }),
+				                     (new RuleView(0, 0, 320, SMALL_MARGIN))
+				                         ->set_margin(0)
+				                         ->set_get_background_color([](const View &) { return DEFAULT_BACK_COLOR; }),
+				                     oauth_channels_tab_view})
+				        ->set_draw_order({2, 1, 0});
+				channels_tab_view =
+				    (new TabView(0, 0, 320, 0))
+				        ->set_views({oauth_channels_view, local_channels_tab_view})
+				        ->set_tab_texts<std::function<std::string()>>(
+				            {[]() { return LOCALIZED(ACCOUNT); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
+				        ->set_lr_tab_switch_enabled(false);
+			} else {
+				channels_tab_view =
+				    (new TabView(0, 0, 320, 0))
+				        ->set_views({oauth_channels_tab_view, local_channels_tab_view})
+				        ->set_tab_texts<std::function<std::string()>>(
+				            {[]() { return LOCALIZED(ACCOUNT); }, []() { return LOCALIZED(LOCAL_CHANNELS); }})
+				        ->set_lr_tab_switch_enabled(false);
+			}
 			update_oauth_subscribed_channels(get_oauth_subscribed_channels());
 		} else {
 			channels_tab_view = local_channels_tab_view;
