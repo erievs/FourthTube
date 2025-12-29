@@ -126,7 +126,7 @@ std::string convert_webp_thumbnail_to_jpg(const std::string &url) {
 		if (webp_pos != std::string::npos) {
 			converted_url.replace(webp_pos, std::string(".webp").size(), ".jpg");
 		}
-		
+
 		return converted_url;
 	}
 	return url;

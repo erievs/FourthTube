@@ -160,6 +160,37 @@ int thumbnail_get_status_code(int handle) {
 	return thumbnail_get_status_code(requests[handle].url);
 }
 
+void thumbnail_get_dimensions(int handle, int *width, int *height) {
+	if (handle == -1) {
+		if (width) {
+			*width = 0;
+		}
+		if (height) {
+			*height = 0;
+		}
+		return;
+	}
+	resource_lock.lock();
+	std::string url = requests[handle].url;
+	if (requested_urls.count(url) && requested_urls[url].is_loaded) {
+		LoadedThumbnail &thumbnail = requested_urls[url].data;
+		if (width) {
+			*width = thumbnail.image_width;
+		}
+		if (height) {
+			*height = thumbnail.image_height;
+		}
+	} else {
+		if (width) {
+			*width = 0;
+		}
+		if (height) {
+			*height = 0;
+		}
+	}
+	resource_lock.unlock();
+}
+
 bool thumbnail_draw(int handle, int x_offset, int y_offset, int x_len, int y_len) {
 	if (handle == -1) {
 		return false;
@@ -201,7 +232,7 @@ static std::vector<u8> http_get(const std::string &url, int &status_code) {
 			resource_lock.lock();
 			if (thumbnail_cache.size() >= THUMBNAIL_CACHE_MAX) {
 				std::string erase_url;
-				int min_time = 1000000000;
+				int min_time = std::numeric_limits<int>::max();
 				for (auto &item : thumbnail_cache) {
 					if (!thumbnail_free_time.count(item.first)) {
 						continue;
@@ -305,7 +336,7 @@ void thumbnail_downloader_thread_func(void *arg) {
 				resource_lock.lock();
 				if (thumbnail_cache.size() >= THUMBNAIL_CACHE_MAX) {
 					std::string erase_url;
-					int min_time = 1000000000;
+					int min_time = std::numeric_limits<int>::max();
 					for (auto &item : thumbnail_cache) {
 						if (!thumbnail_free_time.count(item.first)) {
 							continue;
@@ -334,24 +365,35 @@ void thumbnail_downloader_thread_func(void *arg) {
 					memmove(decoded_data, decoded_data + vertical_offset * w * 2, new_h * w * 2);
 					h = new_h;
 				}
-				// channel icon : round (definitely not the recommended way but we will fill the area outside the circle
-				// with white)
+				// channel icon : round
+				// with alpha mask
 				if (info.type == ThumbnailType::ICON) {
-					float radius = (float)h / 2;
-					for (int i = 0; i < h; i++) {
-						for (int j = 0; j < w; j++) {
-							float distance = std::hypot(radius - (i + 0.5), radius - (j + 0.5));
-							u8 b = decoded_data[(i * w + j) * 2 + 0] & ((1 << 5) - 1);
-							u8 g = (decoded_data[(i * w + j) * 2 + 0] >> 5) |
-							       ((decoded_data[(i * w + j) * 2 + 1] & ((1 << 3) - 1)) << 3);
-							u8 r = decoded_data[(i * w + j) * 2 + 1] >> 3;
-							float proportion = std::max(0.0f, std::min(1.0f, radius + 0.5f - distance));
-							b = b * proportion + (var_night_mode ? 0 : ((1 << 5) - 1)) * (1 - proportion);
-							g = g * proportion + (var_night_mode ? 0 : ((1 << 6) - 1)) * (1 - proportion);
-							r = r * proportion + (var_night_mode ? 0 : ((1 << 5) - 1)) * (1 - proportion);
-							decoded_data[(i * w + j) * 2 + 0] = b | g << 5;
-							decoded_data[(i * w + j) * 2 + 1] = g >> 3 | r << 3;
+					u32 *rgba_data = (u32 *)malloc(w * h * 4);
+					if (rgba_data) {
+						float cx = (float)w / 2.0f;
+						float cy = (float)h / 2.0f;
+						float radius = std::min(cx, cy);
+						for (int i = 0; i < h; i++) {
+							for (int j = 0; j < w; j++) {
+								float distance = std::hypot(cy - (i + 0.5f), cx - (j + 0.5f));
+								u8 b = decoded_data[(i * w + j) * 2 + 0] & ((1 << 5) - 1);
+								u8 g = (decoded_data[(i * w + j) * 2 + 0] >> 5) |
+								       ((decoded_data[(i * w + j) * 2 + 1] & ((1 << 3) - 1)) << 3);
+								u8 r = decoded_data[(i * w + j) * 2 + 1] >> 3;
+
+								// 565 to 888
+								b = (b << 3) | (b >> 2);
+								g = (g << 2) | (g >> 4);
+								r = (r << 3) | (r >> 2);
+
+								float proportion = std::max(0.0f, std::min(1.0f, radius + 0.5f - distance));
+								u8 a = (u8)(proportion * 255);
+
+								rgba_data[i * w + j] = ((u32)r << 24) | ((u32)g << 16) | ((u32)b << 8) | (u32)a;
+							}
 						}
+						free(decoded_data);
+						decoded_data = (u8 *)rgba_data;
 					}
 				}
 
@@ -366,11 +408,13 @@ void thumbnail_downloader_thread_func(void *arg) {
 				}
 
 				Result_with_string result;
-				result = Draw_c2d_image_init(&result_image, texture_w, texture_h, GPU_RGB565);
+				GPU_TEXCOLOR format = (info.type == ThumbnailType::ICON) ? GPU_RGBA8 : GPU_RGB565;
+
+				result = Draw_c2d_image_init(&result_image, texture_w, texture_h, format);
 				if (result.code != 0) {
 					logger.error("thumb-dl", "out of linearmem");
 				} else {
-					result = Draw_set_texture_data(&result_image, decoded_data, w, h, texture_w, texture_h, GPU_RGB565);
+					result = Draw_set_texture_data(&result_image, decoded_data, w, h, texture_w, texture_h, format);
 					if (result.code != 0) {
 						logger.error("thumb-dl", "Draw_set_texture_data() failed");
 					} else {

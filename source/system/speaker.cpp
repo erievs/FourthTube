@@ -117,3 +117,13 @@ void Util_speaker_exit(int play_ch) {
 		util_ndsp_buffer[play_ch][i].data_vaddr = NULL;
 	}
 }
+
+bool Util_speaker_is_buffer_empty(int play_ch) {
+	for (int i = 0; i < BUFFER_SIZE; i++) {
+		if (util_ndsp_buffer[play_ch][i].status == NDSP_WBUF_QUEUED ||
+		    util_ndsp_buffer[play_ch][i].status == NDSP_WBUF_PLAYING) {
+			return false;
+		}
+	}
+	return true;
+}

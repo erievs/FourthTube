@@ -79,6 +79,8 @@ Result_with_string Draw_set_texture_data(Image_data *c2d_image, u8 *buf, int pic
 		pixel_size = 3;
 	} else if (color_format == GPU_RGB565) {
 		pixel_size = 2;
+	} else if (color_format == GPU_RGBA8) {
+		pixel_size = 4;
 	} else {
 		result.code = DEF_ERR_INVALID_ARG;
 		result.string = DEF_ERR_INVALID_ARG_STR;
@@ -139,7 +141,11 @@ Result_with_string Draw_set_texture_data(Image_data *c2d_image, u8 *buf, int pic
 			c3d_offset += increase_list_y[count[1]];
 			count[1]++;
 		}
-	} else if (pixel_size == 3) {
+		c3d_offset += increase_list_y[count[1]];
+		count[1]++;
+	}
+
+	else if (pixel_size == 3) {
 		for (int k = 0; k < y_max; k++) {
 			for (int i = 0; i < x_max; i += 2) {
 				memcpy_asm_4b(&(((u8 *)c2d_image->c2d.tex->data)[c3d_pos + c3d_offset]),
@@ -150,6 +156,24 @@ Result_with_string Draw_set_texture_data(Image_data *c2d_image, u8 *buf, int pic
 				                                         pic_width, pixel_size) +
 				                     4]),
 				       2);
+				c3d_pos += increase_list_x[count[0]];
+				count[0]++;
+			}
+			count[0] = 0;
+			c3d_pos = 0;
+			c3d_offset += increase_list_y[count[1]];
+			count[1]++;
+		}
+	} else if (pixel_size == 4) {
+		for (int k = 0; k < y_max; k++) {
+			for (int i = 0; i < x_max; i += 2) {
+				memcpy_asm_4b(&(((u8 *)c2d_image->c2d.tex->data)[c3d_pos + c3d_offset]),
+				              &(((u8 *)buf)[Draw_convert_to_pos(k + parse_start_height, i + parse_start_width,
+				                                                pic_height, pic_width, pixel_size)]));
+				memcpy_asm_4b(&(((u8 *)c2d_image->c2d.tex->data)[c3d_pos + c3d_offset + 4]),
+				              &(((u8 *)buf)[Draw_convert_to_pos(k + parse_start_height, i + parse_start_width,
+				                                                pic_height, pic_width, pixel_size) +
+				                            4]));
 				c3d_pos += increase_list_x[count[0]];
 				count[0]++;
 			}

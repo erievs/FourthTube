@@ -149,4 +149,8 @@
 <OAUTH_WAITING>Waiting for authentication...</OAUTH_WAITING>
 <OAUTH_TIMEOUT>Authentication timed out</OAUTH_TIMEOUT>
 <OAUTH_LOGIN_INSTRUCTION>1. Open a web browser\n2. Visit the URL shown\n3. Enter the device code\n4. Authorize the app</OAUTH_LOGIN_INSTRUCTION>
-<OAUTH_TOKEN_WARNING>Never share oauth_tokens file\nwith anyone. This file contains access\ncredentials to your YouTube account.</OAUTH_TOKEN_WARNING>
+<OAUTH_TOKEN_WARNING>Teile niemals die Datei oauth_tokens\nmit irgendjemandem. Diese Datei enthält\nZugangsdaten zu deinem YouTube-Konto.</OAUTH_TOKEN_WARNING>
+<SCREEN_TOGGLE_MODE>Bildschirme ausschalten</SCREEN_TOGGLE_MODE>
+<SCREEN_TOGGLE_BOTTOM>Unten</SCREEN_TOGGLE_BOTTOM>
+<SCREEN_TOGGLE_TOP>Oben</SCREEN_TOGGLE_TOP>
+<SCREEN_TOGGLE_BOTH>Beide</SCREEN_TOGGLE_BOTH>

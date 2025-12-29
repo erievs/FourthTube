@@ -238,13 +238,16 @@ std::vector<std::pair<double, std::vector<double>>> NetworkMultipleDecoder::get_
 Result_with_string NetworkMultipleDecoder::seek(s64 microseconds) {
 	Result_with_string result;
 	if (need_reinit) { // the initer function should be stopped
+		fragments_lock.lock();
 		need_reinit = false;
 		result = fragments[(int)seq_using].reinit();
 		if (result.code != 0) {
 			fragments[(int)seq_using].deinit(true);
 			fragments.erase((int)seq_using);
+			fragments_lock.unlock();
 			return result;
 		}
+		fragments_lock.unlock();
 	}
 	if (is_livestream) {
 		int next_fragment = 0;

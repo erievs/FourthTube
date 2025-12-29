@@ -905,8 +905,8 @@ NetworkDecoder::PacketType NetworkDecoder::next_decode_type() {
 
 	if (video_empty && audio_empty && video_decoded_empty) {
 		if (is_av_separate()) {
-			if ((is_stream_eof(VIDEO) || is_stream_error_or_quit(VIDEO))
-			&& (is_stream_eof(AUDIO) || is_stream_error_or_quit(AUDIO))) {
+			if ((is_stream_eof(VIDEO) || is_stream_error_or_quit(VIDEO)) &&
+			    (is_stream_eof(AUDIO) || is_stream_error_or_quit(AUDIO))) {
 				return PacketType::EoF;
 			}
 		} else {
@@ -1253,16 +1253,73 @@ Result_with_string NetworkDecoder::seek(s64 microseconds) {
 			return result;
 		}
 
-		// once successfully sought on video, perform an exact seek on audio
-		double time_base = av_q2d(get_stream(VIDEO)->time_base);
-		if (packet_buffer[VIDEO][0]->pts != AV_NOPTS_VALUE) {
-			microseconds = packet_buffer[VIDEO][0]->pts * time_base * 1000000;
-		} else {
-			microseconds = packet_buffer[VIDEO][0]->dts * time_base * 1000000;
+		// decode and discard video frames until we reach the target timestamp
+		int width, height;
+		bool key_frame;
+		while (true) {
+			result = decode_video(&width, &height, &key_frame);
+			if (result.code == DEF_ERR_NEED_MORE_INPUT) {
+				result = read_packet(VIDEO);
+				if (result.code != 0) {
+					break;
+				}
+				continue;
+			} else if (result.code == DEF_ERR_NEED_MORE_OUTPUT) {
+				// buffer is full
+				u8 *buf;
+				double pos;
+				get_decoded_video_frame(width, height, &buf, &pos);
+				continue;
+			} else if (result.code != 0) {
+				break;
+			}
+
+			// check timestamp
+			double cur_pos;
+			buffered_pts_list_lock.lock();
+			if (!buffered_pts_list.empty()) {
+				cur_pos = *std::prev(buffered_pts_list.end());
+			} else {
+				cur_pos = -1;
+			}
+			buffered_pts_list_lock.unlock();
+
+			if (cur_pos != -1 && cur_pos * 1000000 >= microseconds - 1000) {
+				break;
+			}
+
+			u8 *buf;
+			double pos;
+			get_decoded_video_frame(width, height, &buf, &pos);
 		}
 
-		ffmpeg_result = avformat_seek_file(io->format_context[AUDIO], -1, microseconds, microseconds, microseconds,
-		                                   AVSEEK_FLAG_FRAME); // AVSEEK_FLAG_FRAME <- ???
+		// once successfully sought on video, perform an exact seek on audio
+		double time_base = av_q2d(get_stream(VIDEO)->time_base);
+
+		buffered_pts_list_lock.lock();
+		double video_current_pts = 0;
+		if (!buffered_pts_list.empty()) {
+			video_current_pts = *buffered_pts_list.begin(); // The next frame to be shown
+		} else {
+			// fallback if something went wrong and we have no frames (eof?)
+			if (!packet_buffer[VIDEO].empty()) {
+				if (packet_buffer[VIDEO][0]->pts != AV_NOPTS_VALUE) {
+					video_current_pts = packet_buffer[VIDEO][0]->pts * time_base;
+				} else {
+					video_current_pts = packet_buffer[VIDEO][0]->dts * time_base;
+				}
+			} else {
+				video_current_pts = microseconds / 1000000.0;
+			}
+		}
+		buffered_pts_list_lock.unlock();
+
+		microseconds = video_current_pts * 1000000;
+
+		s64 audio_seek_min = std::max<s64>(0, microseconds - 2000000);
+		s64 audio_seek_max = microseconds + 2000000;
+		ffmpeg_result = avformat_seek_file(io->format_context[AUDIO], -1, audio_seek_min, microseconds, audio_seek_max,
+		                                   AVSEEK_FLAG_FRAME);
 		if (ffmpeg_result < 0) {
 			result.code = DEF_ERR_FFMPEG_RETURNED_NOT_SUCCESS;
 			result.string = DEF_ERR_FFMPEG_RETURNED_NOT_SUCCESS_STR;
@@ -1273,6 +1330,24 @@ Result_with_string NetworkDecoder::seek(s64 microseconds) {
 		result = read_packet(AUDIO);
 		if (result.code != 0) {
 			return result;
+		}
+
+		// Discard audio packets until close to target
+		double audio_time_base = av_q2d(get_stream(AUDIO)->time_base);
+		while (!packet_buffer[AUDIO].empty()) {
+			AVPacket *pkt = packet_buffer[AUDIO].front();
+			double pts = (pkt->pts != AV_NOPTS_VALUE) ? pkt->pts : pkt->dts;
+			pts *= audio_time_base;
+
+			if (pts * 1000000 < microseconds - 50000) { // Keep if within 50ms of target
+				av_packet_free(&pkt);
+				packet_buffer[AUDIO].pop_front();
+				if (packet_buffer[AUDIO].empty()) {
+					read_packet(AUDIO);
+				}
+			} else {
+				break;
+			}
 		}
 		return result;
 	} else {
@@ -1302,6 +1377,74 @@ Result_with_string NetworkDecoder::seek(s64 microseconds) {
 				return result;
 			}
 		}
-		return result;
 	}
+
+	// now, try to decode frames until the current position reaches the required timestamp
+	if (!is_audio_only()) {
+		int width, height;
+		bool key_frame;
+		while (true) {
+			result = decode_video(&width, &height, &key_frame);
+			if (result.code == DEF_ERR_NEED_MORE_INPUT) {
+				result = read_packet(is_av_separate() ? VIDEO : BOTH);
+				if (result.code != 0) {
+					break;
+				}
+				continue;
+			} else if (result.code == DEF_ERR_NEED_MORE_OUTPUT) {
+				// buffer is full, but we haven't reached the target timestamp yet
+				// so pop the frame and discard it
+				u8 *buf;
+				double pos;
+				get_decoded_video_frame(width, height, &buf, &pos);
+				continue;
+			} else if (result.code != 0) {
+				break;
+			}
+
+			// check if the decoded frame is close enough to the target timestamp
+			double time_base = av_q2d(get_stream(VIDEO)->time_base);
+			double cur_pos;
+			buffered_pts_list_lock.lock();
+			// the last inserted one is the current frame
+			if (!buffered_pts_list.empty()) {
+				cur_pos = *std::prev(buffered_pts_list.end());
+			} else {
+				cur_pos = -1;
+			}
+			buffered_pts_list_lock.unlock();
+
+			if (cur_pos != -1 && cur_pos * 1000000 >= microseconds - 1000) {
+				break;
+			}
+
+			// discard the frame
+			u8 *buf;
+			double pos;
+			get_decoded_video_frame(width, height, &buf, &pos);
+		}
+	}
+
+	// Retrying with Packet-based discard for Audio to avoid losing decoded data
+	if (!is_av_separate()) {
+		double time_base = av_q2d(get_stream(AUDIO)->time_base);
+		while (!packet_buffer[AUDIO].empty()) {
+			AVPacket *pkt = packet_buffer[AUDIO].front();
+			double pts = (pkt->pts != AV_NOPTS_VALUE) ? pkt->pts : pkt->dts;
+			pts *= time_base;
+
+			// If packet ends before target?
+			// We don't know duration exactly without decoding or checking next.
+			// But if pts is significantly before target, drop it.
+			// Be conservative.
+			if (pts * 1000000 < microseconds - 100000) { // 100ms grace period
+				av_packet_free(&pkt);
+				packet_buffer[AUDIO].pop_front();
+			} else {
+				break;
+			}
+		}
+	}
+
+	return result;
 }
