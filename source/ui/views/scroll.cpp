@@ -16,8 +16,9 @@ void ScrollView::update_scroller(Hid_info key) {
 	if (key.p_touch) {
 		first_touch_x = key.touch_x;
 		first_touch_y = key.touch_y;
+		double touch_area_bottom = (pull_to_refresh_enabled && content_height == 0) ? y1 : std::min(y0 + content_height, y1);
 		if (x0 <= key.touch_x && key.touch_x < x1 && y0 <= key.touch_y &&
-		    key.touch_y < std::min(y0 + content_height, y1) &&
+		    key.touch_y < touch_area_bottom &&
 		    (var_time_to_turn_off_lcd == 0 || var_afk_time <= var_time_to_turn_off_lcd)) {
 			grabbed = true;
 		}
