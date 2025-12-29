@@ -868,8 +868,13 @@ void Sem_init(void) {
 					(new EmptyView(0, 0, 320, SMALL_MARGIN)),
 					(new TextView(10, 0, 120, DEFAULT_FONT_INTERVAL + SMALL_MARGIN * 2))
 						->set_text([] () {
-							return OAuth::oauth_state == OAuth::OAuthState::AUTHENTICATED ? 
-								LOCALIZED(OAUTH_LOGOUT) : LOCALIZED(OAUTH_LOGIN);
+							if (OAuth::oauth_state == OAuth::OAuthState::AUTHENTICATED) {
+								return LOCALIZED(OAUTH_LOGOUT);
+							} else if (OAuth::oauth_state == OAuth::OAuthState::ERROR) {
+								return LOCALIZED(RETRY);
+							} else {
+								return LOCALIZED(OAUTH_LOGIN);
+							}
 						})
 						->set_x_alignment(TextView::XAlign::CENTER)
 						->set_text_offset(0, -2)
@@ -896,6 +901,8 @@ void Sem_init(void) {
 									oauth_user_view->thumbnail_handle = -1;
 									oauth_user_view->set_height(0);
 								}
+							} else if (OAuth::oauth_state == OAuth::OAuthState::ERROR) {
+								OAuth::refresh_access_token();
 							} else if (OAuth::oauth_state == OAuth::OAuthState::NOT_AUTHENTICATED) {
 								OAuth::start_device_flow();
 								if (OAuth::oauth_state == OAuth::OAuthState::AUTHENTICATING) {
