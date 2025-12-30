@@ -1,7 +1,5 @@
 .data      
 .align 4
-.global memcpy_asm_4b
-.global memcpy_asm
 .global test
 .global memory_test
 .global arg_test
@@ -10,8 +8,6 @@
 .global read_b
 .global read_g
 .global read_r
-.type memcpy_asm, "function"
-.type memcpy_asm_4b, "function"
 .type test, "function"
 .type memory_test, "function"
 .type arg_test, "function"
@@ -40,29 +36,6 @@ value_0: .int 0
 //#define YUV2B(Y, U) CLIP(( 298 * C(Y) + 516 * D(U)              + 128) >> 8)
 
 .text
-memcpy_asm:
-    push { r4-r11 }
-    mov r11, r0
-    add r11, r2
-    sub r11, #1
-
-    cpy_loop:
-    cmp r0, r11
-    bgt cpy_end
-    ldm r1, { r3-r10 }
-    stm r0, { r3-r10 }
-    add r1, #32
-    add r0, #32
-    b cpy_loop
-    cpy_end:
-    pop { r4-r11 }
-    bx lr
-
-memcpy_asm_4b:
-    ldr r2, [r1]
-    str r2, [r0]
-    bx lr
-
 test:
     ldr r0, =0x10000000
     mov r1, #0

@@ -661,6 +661,11 @@ Result_with_string NetworkDecoder::init_decoder(int type) {
 		decoder_context[type]->lowres = 0;
 		decoder_context[type]->flags = AV_CODEC_FLAG_OUTPUT_CORRUPT;
 
+		if (!var_is_new3ds) {
+			decoder_context[type]->skip_frame = AVDISCARD_NONREF;
+			decoder_context[type]->skip_loop_filter = AVDISCARD_ALL;
+		}
+
 		if (codec[type]->capabilities & AV_CODEC_CAP_FRAME_THREADS) {
 			decoder_context[type]->thread_type = FF_THREAD_FRAME;
 		} else if (codec[type]->capabilities & AV_CODEC_CAP_SLICE_THREADS) {

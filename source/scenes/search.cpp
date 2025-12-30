@@ -28,6 +28,62 @@ bool exiting = false;
 
 Mutex resource_lock;
 std::string cur_search_word = "";
+
+static size_t get_next_utf8_char_pos(const std::string &text, size_t pos) {
+	if (pos >= text.length()) {
+		return text.length();
+	}
+
+	unsigned char c = text[pos];
+	if ((c & 0x80) == 0) {
+		return pos + 1;
+	} else if ((c & 0xE0) == 0xC0) {
+		return pos + 2;
+	} else if ((c & 0xF0) == 0xE0) {
+		return pos + 3;
+	} else if ((c & 0xF8) == 0xF0) {
+		return pos + 4;
+	}
+	return pos + 1;
+}
+
+std::string truncate_search_text_for_display(const std::string &text, double max_width, double font_size) {
+	float text_width = Draw_get_width(text, font_size);
+
+	if (text_width <= max_width - SMALL_MARGIN * 2) {
+		return text;
+	}
+
+	std::string ellipsis = "...";
+	float ellipsis_width = Draw_get_width(ellipsis, font_size);
+	float available_width = max_width - SMALL_MARGIN * 2 - ellipsis_width;
+
+	size_t pos = 0;
+	size_t last_valid_pos = 0;
+
+	while (pos < text.length()) {
+		size_t next_pos = get_next_utf8_char_pos(text, pos);
+		if (next_pos > text.length()) {
+			break;
+		}
+
+		std::string substr = text.substr(0, next_pos);
+		float substr_width = Draw_get_width(substr, font_size);
+
+		if (substr_width <= available_width) {
+			last_valid_pos = next_pos;
+			pos = next_pos;
+		} else {
+			break;
+		}
+	}
+
+	if (last_valid_pos > 0 && last_valid_pos < text.length()) {
+		return text.substr(0, last_valid_pos) + ellipsis;
+	}
+
+	return text;
+}
 YouTubeSearchResult search_result;
 bool search_done = false;
 
@@ -334,22 +390,25 @@ bool Search_show_search_keyboard() {
 			resource_lock.lock();
 		}
 		SwkbdState keyboard;
-		swkbdInit(&keyboard, SWKBD_TYPE_NORMAL, 2, 32);
+		swkbdInit(&keyboard, SWKBD_TYPE_NORMAL, 2, 256);
 		swkbdSetFeatures(&keyboard, SWKBD_DEFAULT_QWERTY | SWKBD_PREDICTIVE_INPUT);
 		swkbdSetValidation(&keyboard, SWKBD_NOTEMPTY_NOTBLANK, 0, 0);
 		swkbdSetButton(&keyboard, SWKBD_BUTTON_LEFT, LOCALIZED(CANCEL).c_str(), false);
 		swkbdSetButton(&keyboard, SWKBD_BUTTON_RIGHT, LOCALIZED(OK).c_str(), true);
 		swkbdSetInitialText(&keyboard, cur_search_word.c_str());
-		char search_word[129];
+		char search_word[257];
 		add_cpu_limit(40);
 		video_set_skip_drawing(true);
-		auto button_pressed = swkbdInputText(&keyboard, search_word, 64);
+		auto button_pressed = swkbdInputText(&keyboard, search_word, 256);
 		video_set_skip_drawing(false);
 		remove_cpu_limit(40);
 
 		if (button_pressed == SWKBD_BUTTON_RIGHT) {
 			cur_search_word = search_word;
-			search_box_view->set_text(search_word);
+			// Truncate text to fit in search box and display
+			double search_box_width = 320 - SEARCH_BOX_MARGIN * 3 - URL_BUTTON_WIDTH;
+			std::string display_text = truncate_search_text_for_display(search_word, search_box_width, 0.5);
+			search_box_view->set_text(display_text);
 			search_box_view->set_get_text_color([]() { return DEFAULT_TEXT_COLOR; });
 
 			remove_all_async_tasks_with_type(load_search_results);

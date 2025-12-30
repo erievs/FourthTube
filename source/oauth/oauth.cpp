@@ -31,6 +31,8 @@ std::string refresh_token = "";
 std::string user_account_name = "";
 std::string user_channel_id = "";
 std::string user_photo_url = "";
+std::string user_handle = "";
+std::string user_subscriber_count = "";
 
 static NetworkSessionList *session_list = nullptr;
 
@@ -349,6 +351,8 @@ void revoke_tokens() {
 	user_account_name = "";
 	user_channel_id = "";
 	user_photo_url = "";
+	user_handle = "";
+	user_subscriber_count = "";
 
 	save_tokens();
 }
@@ -363,6 +367,10 @@ std::string get_user_channel_id() { return user_channel_id; }
 
 std::string get_user_photo_url() { return user_photo_url; }
 
+std::string get_user_handle() { return user_handle; }
+
+std::string get_user_subscriber_count() { return user_subscriber_count; }
+
 static void encrypt_decrypt_data(std::vector<u8> &data) {
 	size_t original_size = data.size();
 	size_t padded_size = (original_size + 15) & ~15;
@@ -376,8 +384,9 @@ static void encrypt_decrypt_data(std::vector<u8> &data) {
 
 void save_tokens() {
 	std::string data = "<access_token>" + access_token + "</access_token>\n" + "<refresh_token>" + refresh_token +
-	                   "</refresh_token>\n" + "<user_name>" + user_account_name + "</user_name>\n" + "<channel_id>" +
-	                   user_channel_id + "</channel_id>\n" + "<photo_url>" + user_photo_url + "</photo_url>\n";
+	                   "</refresh_token>\n" + "<user_name>" + user_account_name + "</user_name>\n" + "<photo_url>" +
+	                   user_photo_url + "</photo_url>\n" + "<handle>" + user_handle + "</handle>\n" +
+	                   "<subscriber_count>" + user_subscriber_count + "</subscriber_count>\n";
 
 	std::vector<u8> encrypted_data(data.begin(), data.end());
 	encrypt_decrypt_data(encrypted_data);
@@ -410,10 +419,12 @@ void load_tokens() {
 	size_t refresh_end = data_str.find("</refresh_token>");
 	size_t name_start = data_str.find("<user_name>");
 	size_t name_end = data_str.find("</user_name>");
-	size_t channel_start = data_str.find("<channel_id>");
-	size_t channel_end = data_str.find("</channel_id>");
 	size_t photo_start = data_str.find("<photo_url>");
 	size_t photo_end = data_str.find("</photo_url>");
+	size_t handle_start = data_str.find("<handle>");
+	size_t handle_end = data_str.find("</handle>");
+	size_t subscriber_start = data_str.find("<subscriber_count>");
+	size_t subscriber_end = data_str.find("</subscriber_count>");
 
 	if (access_start != std::string::npos && access_end != std::string::npos) {
 		access_start += 14;
@@ -430,14 +441,19 @@ void load_tokens() {
 		user_account_name = data_str.substr(name_start, name_end - name_start);
 	}
 
-	if (channel_start != std::string::npos && channel_end != std::string::npos) {
-		channel_start += 12;
-		user_channel_id = data_str.substr(channel_start, channel_end - channel_start);
-	}
-
 	if (photo_start != std::string::npos && photo_end != std::string::npos) {
 		photo_start += 11;
 		user_photo_url = data_str.substr(photo_start, photo_end - photo_start);
+	}
+
+	if (handle_start != std::string::npos && handle_end != std::string::npos) {
+		handle_start += 8;
+		user_handle = data_str.substr(handle_start, handle_end - handle_start);
+	}
+
+	if (subscriber_start != std::string::npos && subscriber_end != std::string::npos) {
+		subscriber_start += 18;
+		user_subscriber_count = data_str.substr(subscriber_start, subscriber_end - subscriber_start);
 	}
 }
 
@@ -471,23 +487,71 @@ void fetch_library_data() {
 	}
 
 	auto account = header["activeAccountHeaderRenderer"];
-	if (account.has_key("accountName")) {
-		user_account_name = youtube_parser::get_text_from_object(account["accountName"]);
-	}
 	if (account.has_key("channelEndpoint")) {
 		user_channel_id = account["channelEndpoint"]["browseEndpoint"]["browseId"].string_value();
 	}
-	if (account.has_key("accountPhoto")) {
-		auto thumbnails = account["accountPhoto"]["thumbnails"].array_items();
-		if (!thumbnails.empty()) {
-			user_photo_url = thumbnails[0]["url"].string_value();
-			size_t s_pos = user_photo_url.find("=s");
-			if (s_pos != std::string::npos) {
-				size_t size_end = s_pos + 2;
-				while (size_end < user_photo_url.length() && isdigit(user_photo_url[size_end])) {
-					size_end++;
+
+	bool channel_data_fetched = false;
+
+	if (!user_channel_id.empty()) {
+		std::string channel_post_data = create_browse_request(user_channel_id);
+		auto channel_result = get_session().perform(HttpRequest::POST(
+		    "https://www.youtube.com/youtubei/v1/browse",
+		    {{"Content-Type", "application/json"}, {"Authorization", "Bearer " + access_token}}, channel_post_data));
+
+		if (!channel_result.fail && channel_result.status_code == 200) {
+			channel_result.data.push_back('\0');
+
+			rapidjson::Document channel_json_root;
+			std::string channel_error;
+			RJson channel_response = RJson::parse(channel_json_root, (char *)channel_result.data.data(), channel_error);
+
+			if (channel_error.empty() && channel_response.has_key("header")) {
+				auto channel_header = channel_response["header"];
+				if (channel_header.has_key("c4TabbedHeaderRenderer")) {
+					auto tabbed_header = channel_header["c4TabbedHeaderRenderer"];
+
+					if (tabbed_header.has_key("title")) {
+						user_account_name = tabbed_header["title"].string_value();
+						channel_data_fetched = true;
+					}
+
+					if (tabbed_header.has_key("channelHandleText")) {
+						user_handle = youtube_parser::get_text_from_object(tabbed_header["channelHandleText"]);
+					}
+
+					if (tabbed_header.has_key("subscriberCountText")) {
+						user_subscriber_count =
+						    youtube_parser::get_text_from_object(tabbed_header["subscriberCountText"]);
+					}
+
+					if (tabbed_header.has_key("avatar")) {
+						auto thumbnails = tabbed_header["avatar"]["thumbnails"].array_items();
+						if (!thumbnails.empty()) {
+							user_photo_url = thumbnails[thumbnails.size() - 1]["url"].string_value();
+						}
+					}
 				}
-				user_photo_url = user_photo_url.substr(0, size_end) + "-c-k-c0x00ffffff-no-rj";
+			}
+		}
+	}
+
+	if (!channel_data_fetched) {
+		if (account.has_key("accountName")) {
+			user_account_name = youtube_parser::get_text_from_object(account["accountName"]);
+		}
+		if (account.has_key("accountPhoto")) {
+			auto thumbnails = account["accountPhoto"]["thumbnails"].array_items();
+			if (!thumbnails.empty()) {
+				user_photo_url = thumbnails[0]["url"].string_value();
+				size_t s_pos = user_photo_url.find("=s");
+				if (s_pos != std::string::npos) {
+					size_t size_end = s_pos + 2;
+					while (size_end < user_photo_url.length() && isdigit(user_photo_url[size_end])) {
+						size_end++;
+					}
+					user_photo_url = user_photo_url.substr(0, size_end) + "-c-k-c0x00ffffff-no-rj";
+				}
 			}
 		}
 	}

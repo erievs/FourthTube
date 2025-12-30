@@ -338,11 +338,16 @@ static void oauth_worker_thread_func(void *) {
 				resource_lock.lock();
 				if (oauth_user_view) {
 					std::string user_name = OAuth::get_user_account_name();
-					std::string channel_id = OAuth::get_user_channel_id();
+					std::string handle = OAuth::get_user_handle();
+					std::string subscriber_count = OAuth::get_user_subscriber_count();
 					std::string photo_url = OAuth::get_user_photo_url();
 					
+					std::vector<std::string> aux_lines;
+					if (!handle.empty()) aux_lines.push_back(handle);
+					if (!subscriber_count.empty()) aux_lines.push_back(subscriber_count);
+					
 					oauth_user_view->set_name(user_name);
-					oauth_user_view->set_auxiliary_lines({channel_id});
+					oauth_user_view->set_auxiliary_lines(aux_lines);
 					oauth_user_view->set_thumbnail_url(photo_url);
 					oauth_user_view->set_height(CHANNEL_ICON_HEIGHT);
 					if (!photo_url.empty()) {
@@ -863,8 +868,13 @@ void Sem_init(void) {
 					(new EmptyView(0, 0, 320, SMALL_MARGIN)),
 					(new TextView(10, 0, 120, DEFAULT_FONT_INTERVAL + SMALL_MARGIN * 2))
 						->set_text([] () {
-							return OAuth::oauth_state == OAuth::OAuthState::AUTHENTICATED ? 
-								LOCALIZED(OAUTH_LOGOUT) : LOCALIZED(OAUTH_LOGIN);
+							if (OAuth::oauth_state == OAuth::OAuthState::AUTHENTICATED) {
+								return LOCALIZED(OAUTH_LOGOUT);
+							} else if (OAuth::oauth_state == OAuth::OAuthState::ERROR) {
+								return LOCALIZED(RETRY);
+							} else {
+								return LOCALIZED(OAUTH_LOGIN);
+							}
 						})
 						->set_x_alignment(TextView::XAlign::CENTER)
 						->set_text_offset(0, -2)
@@ -891,6 +901,8 @@ void Sem_init(void) {
 									oauth_user_view->thumbnail_handle = -1;
 									oauth_user_view->set_height(0);
 								}
+							} else if (OAuth::oauth_state == OAuth::OAuthState::ERROR) {
+								OAuth::refresh_access_token();
 							} else if (OAuth::oauth_state == OAuth::OAuthState::NOT_AUTHENTICATED) {
 								OAuth::start_device_flow();
 								if (OAuth::oauth_state == OAuth::OAuthState::AUTHENTICATING) {
@@ -968,12 +980,17 @@ void Sem_init(void) {
 		var_oauth_enabled = true;
 
 		std::string user_name = OAuth::get_user_account_name();
-		std::string channel_id = OAuth::get_user_channel_id();
+		std::string handle = OAuth::get_user_handle();
+		std::string subscriber_count = OAuth::get_user_subscriber_count();
 		std::string photo_url = OAuth::get_user_photo_url();
 		
 		if (oauth_user_view && !user_name.empty()) {
+			std::vector<std::string> aux_lines;
+			if (!handle.empty()) aux_lines.push_back(handle);
+			if (!subscriber_count.empty()) aux_lines.push_back(subscriber_count);
+			
 			oauth_user_view->set_name(user_name);
-			oauth_user_view->set_auxiliary_lines({channel_id});
+			oauth_user_view->set_auxiliary_lines(aux_lines);
 			oauth_user_view->set_thumbnail_url(photo_url);
 			oauth_user_view->set_height(CHANNEL_ICON_HEIGHT);
 			if (!photo_url.empty()) {
