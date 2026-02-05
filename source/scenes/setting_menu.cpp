@@ -1,4 +1,4 @@
-﻿// clang-format off
+// clang-format off
 #include "headers.hpp"
 #include <functional>
 #include <regex>
@@ -708,7 +708,7 @@ void Sem_init(void) {
 			(new ScrollView(0, 0, 320, 0))
 				->set_views({
 					(new TextView(0, 0, 320, DEFAULT_FONT_INTERVAL + SMALL_MARGIN * 2))
-						->set_text((std::function<std::string ()>) [] () { return LOCALIZED(UPDATE); })
+						->set_text((std::function<std::string ()>) [] () { return LOCALIZED(UPDATE) + " - " + DEF_CURRENT_APP_VER; })
 						->set_font_size(0.6, DEFAULT_FONT_INTERVAL)
 						->set_text_offset(0, -2),
 					(new TextView(0, 0, 320, DEFAULT_FONT_INTERVAL + SMALL_MARGIN))
