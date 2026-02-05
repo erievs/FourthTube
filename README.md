@@ -20,7 +20,12 @@ for it. Unfortunately we cannot provide an ETA when this will be fully resolved,
 have personal lives outside of this project so devote as much time as we can to it. But also remember this is
 open source, if you figure out a fix, while we (the main maintainers) are busy, feel free to make a 
 pull request, and well add you to.the credits! Sorry for such a long rant, we just want to inform ya'll that
-this isn't dead and we are trying!
+this isn't dead and we are trying! We will update you as this saga continues.
+
+Update 1: A member on our Discord, saltsalad, has reported that switching to VisionOS in settings appears 
+to resolve the issue of playback, but not subtitles.
+
+Update 2: Smu1zel has found the issue, YouTube has required a PO-TOKEN on the default implemention. An interm release will make VisionOS the default choice, but do be aware it will cause YouTube Kids content to be unwatchable as it's blocked from it.
 
 **Please don't make duplicate issues (such as O3DS crashing). This will only make it harder to keep track of bugs.**
 
