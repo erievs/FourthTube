@@ -11,6 +11,17 @@ A work-in-progress homebrew YouTube client for the 3DS
 As this app is still in the beta stage, you may and will encounter crashes and other bugs.  
 If you find one of those, it would be helpful to open an issue on this GitHub repository.  
 
+## Notice As Of The 4th Of February, 2026 On Playback 
+
+YouTube in recent months have decided once more to make our lives more of a pain and have been 
+changing their backend. Unfortunately, a wave of changes, has led to video playback to face various 
+issue, we are aware of these issues now. We are currently working hard trying to figure out a fix
+for it. Unfortunately we cannot provide an ETA when this will be fully resolved, do be aware that we all 
+have personal lives outside of this project so devote as much time as we can to it. But also remember this is
+open source, if you figure out a fix, while we (the main maintainers) are busy, feel free to make a 
+pull request, and well add you to.the credits! Sorry for such a long rant, we just want to inform ya'll that
+this isn't dead and we are trying!
+
 **Please don't make duplicate issues (such as O3DS crashing). This will only make it harder to keep track of bugs.**
 
 ## Credits
