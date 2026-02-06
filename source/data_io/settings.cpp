@@ -72,7 +72,7 @@ void load_settings() {
 	var_forward_buffer_ratio = std::max(0.1, std::min(1.0, load_double("forward_buffer_ratio", 0.8)));
 	var_history_enabled = load_int("history_enabled", 1);
 	var_video_show_debug_info = load_int("video_show_debug_info", 0);
-	var_player_response = load_int("player_response", 0);
+	var_player_response = load_int("player_response", 1); // (Beta 24.1, switch to Android VR for now)
 	var_video_linear_filter = load_int("linear_filter", 1);
 	var_dpad_scroll_speed0 = std::max(1.0, std::min(12.0, load_double("dpad_scroll_speed0", 6.0)));
 	var_dpad_scroll_speed1 = std::max(var_dpad_scroll_speed0, std::min(12.0, load_double("dpad_scroll_speed1", 9.0)));
