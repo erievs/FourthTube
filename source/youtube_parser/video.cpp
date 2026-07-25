@@ -112,35 +112,48 @@ static bool extract_player_data(Document &json_root, RJson player_response, YouT
 		}
 	}
 
-	// extract caption data
-	std::string captions_content =
-	    R"({"context": {"client": {"hl": "%0","gl": "%1","clientName": "MWEB","clientVersion": "2.20241202.07.00"}}, "videoId": "%2"})";
+	std::string captions_content;
+	std::map<std::string, std::string> caption_headers;
+
+	// video client for captions
+	bool use_android_vr_for_captions = OAuth::is_authenticated();
+
+	if (use_android_vr_for_captions) {
+		captions_content =
+		    R"({"context": {"client": {"hl": "%0","gl": "%1","clientName": "ANDROID_VR","clientVersion": "1.65.10","deviceMake": "Oculus","deviceModel": "Quest 3","androidSdkVersion": "34","osName": "Android","osVersion": "14"}}, "videoId": "%2"})";
+		caption_headers["Authorization"] = "Bearer " + OAuth::get_access_token();
+	} else {
+		captions_content =
+		    R"({"context": {"client": {"hl": "%0","gl": "%1","clientName": "MWEB","clientVersion": "2.20241202.07.00"}}, "videoId": "%2"})";
+	}
+
 	captions_content = std::regex_replace(captions_content, std::regex("%0"), language_code);
 	captions_content = std::regex_replace(captions_content, std::regex("%1"), country_code);
 	captions_content = std::regex_replace(captions_content, std::regex("%2"), res.id);
 
-	access_and_parse_json([&]() { return http_post_json(get_innertube_api_url("player"), captions_content); },
-	                      [&](Document &, RJson mweb_data) {
-		                      RJson captions = mweb_data["captions"]["playerCaptionsTracklistRenderer"];
+	access_and_parse_json(
+	    [&]() { return http_post_json(get_innertube_api_url("player"), captions_content, caption_headers); },
+	    [&](Document &, RJson mweb_data) {
+		    RJson captions = mweb_data["captions"]["playerCaptionsTracklistRenderer"];
 
-		                      for (auto base_lang : captions["captionTracks"].array_items()) {
-			                      YouTubeVideoDetail::CaptionBaseLanguage cur_lang;
-			                      cur_lang.name = get_text_from_object(base_lang["name"]);
-			                      cur_lang.id = base_lang["languageCode"].string_value();
-			                      cur_lang.base_url = base_lang["baseUrl"].string_value();
-			                      cur_lang.is_translatable = base_lang["isTranslatable"].bool_value();
-			                      res.caption_base_languages.push_back(cur_lang);
-			                      logger.info("Caption Data", cur_lang.base_url);
-		                      }
+		    for (auto base_lang : captions["captionTracks"].array_items()) {
+			    YouTubeVideoDetail::CaptionBaseLanguage cur_lang;
+			    cur_lang.name = get_text_from_object(base_lang["name"]);
+			    cur_lang.id = base_lang["languageCode"].string_value();
+			    cur_lang.base_url = base_lang["baseUrl"].string_value();
+			    cur_lang.is_translatable = base_lang["isTranslatable"].bool_value();
+			    res.caption_base_languages.push_back(cur_lang);
+			    logger.info("Caption Data", cur_lang.base_url);
+		    }
 
-		                      for (auto translation_lang : captions["translationLanguages"].array_items()) {
-			                      YouTubeVideoDetail::CaptionTranslationLanguage cur_lang;
-			                      cur_lang.name = get_text_from_object(translation_lang["languageName"]);
-			                      cur_lang.id = translation_lang["languageCode"].string_value();
-			                      res.caption_translation_languages.push_back(cur_lang);
-		                      }
-	                      },
-	                      [&](const std::string &error) { debug_error((res.error = "[v-cap-mweb] " + error)); });
+		    for (auto translation_lang : captions["translationLanguages"].array_items()) {
+			    YouTubeVideoDetail::CaptionTranslationLanguage cur_lang;
+			    cur_lang.name = get_text_from_object(translation_lang["languageName"]);
+			    cur_lang.id = translation_lang["languageCode"].string_value();
+			    res.caption_translation_languages.push_back(cur_lang);
+		    }
+	    },
+	    [&](const std::string &error) { debug_error((res.error = "[v-cap-mweb] " + error)); });
 
 	return true;
 }
@@ -895,31 +908,88 @@ void YouTubeVideoDetail::load_caption(const std::string &base_lang_id, const std
 		}
 	}
 
-	std::string url = "https://m.youtube.com" + caption_base_languages[base_lang_index].base_url;
+	std::string url = caption_base_languages[base_lang_index].base_url;
+
 	if (translation_lang_id != "") {
 		url += "&tlang=" + translation_lang_id;
 	}
-	url += "&fmt=json3&xorb=2&xobt=3&xovt=3"; // the meanings of xorb, xobt, xovt are unknown, and these three
-	                                          // parameters seem to be unnecessary
 
-	access_and_parse_json([&]() { return http_get(url); },
-	                      [&](Document &, RJson yt_result) {
-		                      std::vector<YouTubeVideoDetail::CaptionPiece> cur_caption;
-		                      for (auto caption_piece : yt_result["events"].array_items()) {
-			                      if (!caption_piece.has_key("segs")) {
-				                      continue;
-			                      }
-			                      YouTubeVideoDetail::CaptionPiece cur_caption_piece;
-			                      cur_caption_piece.start_time = caption_piece["tStartMs"].int_value() / 1000.0;
-			                      cur_caption_piece.end_time =
-			                          cur_caption_piece.start_time + caption_piece["dDurationMs"].int_value() / 1000.0;
-			                      for (auto seg : caption_piece["segs"].array_items()) {
-				                      cur_caption_piece.content += seg["utf8"].string_value();
-			                      }
+	std::map<std::string, std::string> headers;
+	if (metadata_from_android_vr && OAuth::is_authenticated()) {
+		headers["Authorization"] = "Bearer " + OAuth::get_access_token();
+	}
 
-			                      cur_caption.push_back(cur_caption_piece);
-		                      }
-		                      caption_data[{base_lang_id, translation_lang_id}] = cur_caption;
-	                      },
-	                      [&](const std::string &error) { debug_error((this->error = "[v-cap+] " + error)); });
+	auto raw_response = http_get(url, headers);
+	if (!raw_response.first) {
+		this->error = "[v-cap+] HTTP request failed";
+		return;
+	}
+
+	std::string xml_content = raw_response.second;
+	std::vector<YouTubeVideoDetail::CaptionPiece> cur_caption;
+
+	size_t pos = 0;
+	while ((pos = xml_content.find("<p ", pos)) != std::string::npos) {
+		size_t start_pos = xml_content.find("t=\"", pos);
+		if (start_pos == std::string::npos || start_pos > pos + 200) {
+			pos += 3;
+			continue;
+		}
+		start_pos += 3;
+		size_t start_end = xml_content.find("\"", start_pos);
+		std::string start_str = xml_content.substr(start_pos, start_end - start_pos);
+
+		size_t dur_pos = xml_content.find("d=\"", pos);
+		if (dur_pos == std::string::npos || dur_pos > pos + 200) {
+			pos += 3;
+			continue;
+		}
+		dur_pos += 3;
+		size_t dur_end = xml_content.find("\"", dur_pos);
+		std::string dur_str = xml_content.substr(dur_pos, dur_end - dur_pos);
+
+		size_t content_start = xml_content.find(">", pos) + 1;
+		size_t content_end = xml_content.find("</p>", content_start);
+		if (content_end == std::string::npos) {
+			pos += 3;
+			continue;
+		}
+
+		std::string p_content = xml_content.substr(content_start, content_end - content_start);
+		std::string combined_text;
+
+		size_t s_pos = 0;
+		while ((s_pos = p_content.find("<s ", s_pos)) != std::string::npos) {
+			size_t s_content_start = p_content.find(">", s_pos) + 1;
+			size_t s_content_end = p_content.find("</s>", s_content_start);
+			if (s_content_end == std::string::npos) {
+				break;
+			}
+
+			combined_text += p_content.substr(s_content_start, s_content_end - s_content_start);
+			s_pos = s_content_end;
+		}
+
+		const std::pair<std::string, std::string> entities[] = {
+		    {"&amp;", "&"}, {"&lt;", "<"}, {"&gt;", ">"}, {"&quot;", "\""}, {"&#39;", "'"}};
+		for (const auto &entity : entities) {
+			size_t entity_pos = 0;
+			while ((entity_pos = combined_text.find(entity.first, entity_pos)) != std::string::npos) {
+				combined_text.replace(entity_pos, entity.first.length(), entity.second);
+				entity_pos += entity.second.length();
+			}
+		}
+
+		if (!combined_text.empty()) {
+			YouTubeVideoDetail::CaptionPiece caption_piece;
+			caption_piece.start_time = std::stof(start_str) / 1000.0f;
+			caption_piece.end_time = caption_piece.start_time + std::stof(dur_str) / 1000.0f;
+			caption_piece.content = combined_text;
+			cur_caption.push_back(caption_piece);
+		}
+
+		pos = content_end;
+	}
+
+	caption_data[{base_lang_id, translation_lang_id}] = cur_caption;
 }
