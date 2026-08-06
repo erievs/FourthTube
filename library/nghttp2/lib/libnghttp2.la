@@ -17,7 +17,7 @@ old_library='libnghttp2.a'
 inherited_linker_flags=''
 
 # Libraries that this one depends upon.
-dependency_libs=' -L/opt/devkitpro/portlibs/3ds/lib -L/c/Users/Lynden/Downloads/FourthTube/library/libctru/lib -lctru'
+dependency_libs=' -LA:/soft/devkitpro/portlibs/3ds/lib -LA:/proj/FourthTube/library/libctru/lib -lctru'
 
 # Names of additional weak libraries provided by this library
 weak_library_names=''
@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/usr/lib'
+libdir='/lib'

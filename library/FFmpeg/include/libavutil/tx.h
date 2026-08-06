@@ -131,6 +131,8 @@ enum AVTXType {
 
     /* Not part of the API, do not use */
     AV_TX_NB,
+	
+	AV_TX_TERMINATING = 0x7FFFFFFF
 };
 
 /**

@@ -4,4 +4,4 @@
 
 Current binaries are built with:
 	- libbrotli v1.0.9
-	- devkitARM release 57
+	- devkitARM release 68

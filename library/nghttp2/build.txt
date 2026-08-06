@@ -7,4 +7,4 @@
 
 Current binaries are built with:
 	- nghttp2 v1.64.0
-	- devkitARM release 65
+	- devkitARM release 68

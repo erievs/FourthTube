@@ -429,7 +429,8 @@ enum AVPixelFormat {
     AV_PIX_FMT_GBRAP14BE,  ///< planar GBR 4:4:4:4 56bpp, big-endian
     AV_PIX_FMT_GBRAP14LE,  ///< planar GBR 4:4:4:4 56bpp, little-endian
 
-    AV_PIX_FMT_NB         ///< number of pixel formats, DO NOT USE THIS if you want to link with shared libav* because the number of formats might differ between versions
+    AV_PIX_FMT_NB,         ///< number of pixel formats, DO NOT USE THIS if you want to link with shared libav* because the number of formats might differ between versions
+	AV_PIX_FMT_TERMINATING = 0x7FFFFFFF, // force int
 };
 
 #if AV_HAVE_BIGENDIAN
