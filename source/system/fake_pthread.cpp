@@ -73,11 +73,18 @@ int custom_pthread_once(pthread_once_t *once_control, void (*init_routine)(void)
 		} else {
 			next = val;
 		}
-	} while (__strex((s32 *)&once_control->status, val));
+	} while (__strex((s32 *)&once_control->status, next));
 
 	if (val == PTHREAD_ONCE_NOT_RUN) {
 		init_routine();
+		__dmb();
 		once_control->status = PTHREAD_ONCE_FINISHED;
+		__dmb();
+	} else if (val == PTHREAD_ONCE_RUNNING) {
+		// Other callers wait until the initializing thread completes.
+		while (once_control->status == PTHREAD_ONCE_RUNNING) {
+			usleep(1000);
+		}
 	}
 	__dmb();
 	return 0;
