@@ -1,6 +1,7 @@
 // clang-format off
 #include "headers.hpp"
 #include <functional>
+#include <sstream>
 #include <regex>
 
 #include "data_io/settings.hpp"
