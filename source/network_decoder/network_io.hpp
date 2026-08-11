@@ -82,6 +82,7 @@ struct NetworkSessionList { // one instance per thread
 		CURL *curl;
 		NetworkResult *res;
 		char *errbuf;
+		struct curl_slist *request_headers;
 		std::string orig_url;
 		HttpRequest::on_finish_callback_t on_finish;
 	};

@@ -154,7 +154,7 @@ void NetworkSessionList::curl_add_request(const HttpRequest &request, NetworkRes
 	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, request_headers_list);
 
 	curl_multi_add_handle(curl_multi, curl);
-	curl_requests.push_back({curl, res, curl_errbuf, request.url, request.on_finish});
+	curl_requests.push_back({curl, res, curl_errbuf, request_headers_list, request.url, request.on_finish});
 }
 CURLMcode NetworkSessionList::curl_perform_requests() {
 	auto read_multi_info = [this]() {
@@ -237,6 +237,7 @@ void NetworkSessionList::curl_clear_requests() {
 		free(i.errbuf);
 		curl_multi_remove_handle(curl_multi, i.curl);
 		curl_easy_cleanup(i.curl);
+		curl_slist_free_all(i.request_headers);
 	}
 	curl_requests.clear();
 }
