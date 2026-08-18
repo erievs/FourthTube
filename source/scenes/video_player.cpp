@@ -156,6 +156,7 @@ SuccinctVideoView *cur_playing_video_view;
 CustomView *download_progress_view = NULL;
 SelectorView *video_quality_selector_view;
 SelectorView *video_loop_view;
+SelectorView *video_3d_selector_view;
 VerticalListView *debug_info_view = NULL;
 ScrollView *playback_tab_view = NULL;
 
@@ -347,6 +348,25 @@ debug_info_view =
 	}
 	                 }),
 	             video_quality_selector_view,
+				 video_3d_selector_view = (new SelectorView(0, 0, 320, 35, true))
+											  ->set_texts({(std::function<std::string()>)[]() { return LOCALIZED(OFF); },
+														   (std::function<std::string()>)[]() { return "Side by Side"; }
+	},
+														  var_3d_mode)
+											  ->set_title([](const SelectorView &) { return "3D"; })
+											  ->set_on_change([](const SelectorView &view) {
+	if (var_3d_mode != view.selected_button) {
+		var_3d_mode = view.selected_button;
+		if (var_3d_mode) {
+			gfxSetWide(false);
+			gfxSet3D(true);
+		} else {
+			gfxSet3D(false);
+			gfxSetWide(true);
+		}
+		misc_tasks_request(TASK_SAVE_SETTINGS);
+	}
+											  }),
 	             video_loop_view = (new SelectorView(0, 0, 320, 35, true))
 	                                   ->set_texts({(std::function<std::string()>)[]() { return LOCALIZED(OFF); },
 	                                                (std::function<std::string()>)[]() {
@@ -1970,8 +1990,16 @@ debug_info_view =
 		    vid_y += 15;
 	    }
 
-	    Draw_screen_ready(0, video_get_top_screen_background_color());
-	    video_draw_video_frame();
+		if (var_3d_mode) {
+			Draw_screen_ready(0, video_get_top_screen_background_color());
+	    	video_draw_video_frame();
+			vid_x = (800 - (vid_width_org * vid_zoom)) / 2;
+			Draw_screen_ready(1, video_get_top_screen_background_color());
+	    	video_draw_video_frame();
+		} else {
+	    	Draw_screen_ready(0, video_get_top_screen_background_color());
+	    	video_draw_video_frame();
+		}
 	    logger.draw();
 	    if (video_should_draw_top_bar()) {
 		    Draw_top_ui();
@@ -2478,7 +2506,7 @@ debug_info_view =
 		    Draw_frame_ready();
 		    video_draw_top_screen();
 
-		    Draw_screen_ready(1, DEFAULT_BACK_COLOR);
+		    Draw_screen_ready(2, DEFAULT_BACK_COLOR);
 
 		    small_resource_lock.lock();
 		    main_view->draw();
