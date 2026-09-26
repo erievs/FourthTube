@@ -358,10 +358,8 @@ debug_info_view =
 	if (var_3d_mode != view.selected_button) {
 		var_3d_mode = view.selected_button;
 		if (var_3d_mode) {
-			gfxSetWide(false);
 			gfxSet3D(true);
 		} else {
-			gfxSet3D(false);
 			gfxSetWide(true);
 		}
 		misc_tasks_request(TASK_SAVE_SETTINGS);
@@ -1990,14 +1988,11 @@ debug_info_view =
 		    vid_y += 15;
 	    }
 
+		Draw_screen_ready(0, video_get_top_screen_background_color());
+	    video_draw_video_frame();
 		if (var_3d_mode) {
-			Draw_screen_ready(0, video_get_top_screen_background_color());
-	    	video_draw_video_frame();
 			vid_x = (800 - (vid_width_org * vid_zoom)) / 2;
 			Draw_screen_ready(1, video_get_top_screen_background_color());
-	    	video_draw_video_frame();
-		} else {
-	    	Draw_screen_ready(0, video_get_top_screen_background_color());
 	    	video_draw_video_frame();
 		}
 	    logger.draw();

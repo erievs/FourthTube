@@ -692,6 +692,7 @@ void Draw_reinit(bool wide, bool stereo3d) {
 
 	// gfxInitDefault();
 	gfxSetWide(wide);
+	gfxSet3D(stereo3d);
 
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
