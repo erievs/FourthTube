@@ -1193,7 +1193,7 @@ void Home_draw(void) {
 		Draw_frame_ready();
 		video_draw_top_screen();
 
-		Draw_screen_ready(1, DEFAULT_BACK_COLOR);
+		Draw_screen_ready(2, DEFAULT_BACK_COLOR);
 
 		resource_lock.lock();
 		main_view->draw();

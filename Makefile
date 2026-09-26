@@ -80,7 +80,7 @@ CFLAGS	+=	$(INCLUDE) -DARM11 -D__3DS__ -DCURL_STATICLIB
 CXXFLAGS	:= $(CFLAGS) -fno-exceptions -std=gnu++14
 
 ASFLAGS	:= $(ARCH)
-LDFLAGS	=	-specs=3dsx.specs $(ARCH) -Wl,-Map,$(notdir $*.map)
+LDFLAGS	=	-specs=3dsx.specs $(ARCH) -Wl,--allow-multiple-definition,-Map,$(notdir $*.map)
 
 LIBS	:= -lavfilter -lswresample -lavformat -lswscale -lavcodec -lavutil -lcurl -lbrotli -lnghttp2 -lmbedtls -lmbedx509 -lmbedcrypto -lz  -lcitro2d -lcitro3d -lctru -lm
 

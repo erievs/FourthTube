@@ -480,7 +480,7 @@ void Search_draw(void) {
 		Draw_frame_ready();
 		video_draw_top_screen();
 
-		Draw_screen_ready(1, DEFAULT_BACK_COLOR);
+		Draw_screen_ready(2, DEFAULT_BACK_COLOR);
 
 		// (!) : I don't know how to draw textures truncated, so I will just fill the margin with white again
 		resource_lock.lock();

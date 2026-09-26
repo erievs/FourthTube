@@ -101,6 +101,7 @@ void Menu_init(void) {
 	Draw_frame_ready();
 	Draw_screen_ready(0, DEF_DRAW_BLACK); // Black prevents flashing.
 	Draw_screen_ready(1, DEF_DRAW_BLACK); // Same here
+	Draw_screen_ready(2, DEF_DRAW_BLACK); // Same here
 	Draw_apply_draw();
 
 	Util_expl_init();
@@ -240,11 +241,12 @@ bool Menu_main(void) {
 
 		Draw_frame_ready();
 		Draw_screen_ready(0, DEF_DRAW_WHITE);
+		Draw_screen_ready(1, DEF_DRAW_WHITE);
 
 		Draw_xy_centered(error_msg, 0, 400, 0, 240, 0.5, 0.5, DEF_DRAW_BLACK);
 		Draw_top_ui();
 
-		Draw_screen_ready(1, DEF_DRAW_WHITE);
+		Draw_screen_ready(2, DEF_DRAW_WHITE);
 
 		Draw_apply_draw();
 

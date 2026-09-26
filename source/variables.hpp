@@ -12,6 +12,7 @@ extern bool var_history_enabled;
 extern bool var_oauth_enabled;
 extern int var_autoplay_level;
 extern int var_loop_mode;
+extern int var_3d_mode;
 extern int var_video_quality;
 extern bool var_show_fps;
 extern bool var_full_dislike_like_count;

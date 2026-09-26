@@ -12,6 +12,7 @@ bool var_history_enabled = true;
 bool var_oauth_enabled = false;
 int var_autoplay_level = 2; // 0 : never, 1 : only in a playlist, 2 : always
 int var_loop_mode = false;
+int var_3d_mode = 0; // 0 : off, 1 : side-by-side (left on left, right on right), 2... other possible modes
 int var_video_quality = 0;
 bool var_show_fps = false;
 bool var_full_screen_mode = false;

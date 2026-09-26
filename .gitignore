@@ -11,3 +11,4 @@
 !source/network_decoder/yuv_converter.s
 !source/system/test.s
 *.dmp
+/tags

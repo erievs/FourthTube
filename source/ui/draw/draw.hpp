@@ -50,7 +50,7 @@ void Draw_debug_info(void);
 
 Result_with_string Draw_init(bool wide);
 
-void Draw_reinit(bool wide);
+void Draw_reinit(bool wide, bool stereo);
 
 Result_with_string Draw_load_system_font(int system_font_num);
 
