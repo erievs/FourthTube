@@ -17,7 +17,7 @@ old_library='libcurl.a'
 inherited_linker_flags=''
 
 # Libraries that this one depends upon.
-dependency_libs=' -L/a/soft/devkitPro/portlibs/3ds/lib -LA:/proj/ThirdTube/library/libctru/lib -LA:/proj/ThirdTube/library/libbrotli/lib -LA:/soft/msys2/mingw64/bin/../lib -L/lib -LA:/proj/ThirdTube/library/nghttp2/lib A:/proj/ThirdTube/library/nghttp2/lib/libnghttp2.la -lmbedtls -lmbedx509 -lmbedcrypto -lz -lctru'
+dependency_libs=' -LA:/soft/devkitpro/portlibs/3ds/lib -LA:/proj/FourthTube/library/libctru/lib -LA:/proj/FourthTube/library/libbrotli/lib -L/lib -LA:/proj/FourthTube/library/nghttp2/lib A:/proj/FourthTube/library/nghttp2/lib/libnghttp2.la -lmbedtls -lmbedx509 -lmbedcrypto -lctru'
 
 # Names of additional weak libraries provided by this library
 weak_library_names=''

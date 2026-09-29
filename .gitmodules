@@ -1,3 +1,7 @@
 [submodule "library/libctru/source"]
 	path = library/libctru/source
 	url = https://github.com/Smu1zel/libctru
+
+[submodule "library/FFmpeg/FFmpeg"]
+	path = library/FFmpeg/FFmpeg
+	url = https://github.com/windows-server-2003/FFmpeg.git

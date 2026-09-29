@@ -12,7 +12,7 @@
 
 Current binaries are built with:
 	- libcurl 7.82.0
-	- devkitARM release 57
+	- devkitARM release 68
 
 The provided 3ds.patch has been created based on one found at https://github.com/devkitPro/pacman-packages/blob/master/3ds/curl/
 

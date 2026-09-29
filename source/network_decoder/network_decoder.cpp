@@ -1182,7 +1182,6 @@ Result_with_string NetworkDecoder::get_decoded_video_frame(int width, int height
 			return result;
 		}
 		AVFrame *cur_frame = video_tmp_frames.get_next_poped();
-		video_tmp_frames.pop();
 
 		int cpy_size[2] = {
 		    0,
@@ -1201,6 +1200,7 @@ Result_with_string NetworkDecoder::get_decoded_video_frame(int width, int height
 		*data = sw_video_output_tmp;
 
 		av_frame_unref(cur_frame);
+		video_tmp_frames.pop();
 	}
 
 	buffered_pts_list_lock.lock();
