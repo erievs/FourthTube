@@ -13,21 +13,21 @@ If you find one of those, it would be helpful to open an issue on this GitHub re
 
 ## Notice As Of The 4th Of February, 2026 On Playback 
 
-YouTube in recent months have decided once more to make our lives more of a pain and have been 
-changing their backend. Unfortunately, a wave of changes, has led to video playback to face various 
-issue, we are aware of these issues now. We are currently working hard trying to figure out a fix
-for it. Unfortunately we cannot provide an ETA when this will be fully resolved, do be aware that we all 
-have personal lives outside of this project so devote as much time as we can to it. But also remember this is
-open source, if you figure out a fix, while we (the main maintainers) are busy, feel free to make a 
-pull request, and well add you to.the credits! Sorry for such a long rant, we just want to inform ya'll that
+YouTube in recent months has decided once more to make our lives more of a pain and has been 
+changing their backend. Unfortunately, a wave of changes has led to video playback facing various 
+issues; we are aware of these issues now. We are currently working hard trying to figure out a fix
+for it. Unfortunately, we cannot provide an ETA for when this will be fully resolved. Do be aware that we all 
+have personal lives outside of this project, so we devote as much time as we can to it. But also remember this is
+open source; if you figure out a fix while we (the main maintainers) are busy, feel free to make a 
+pull request, and we'll add you to the credits! Sorry for such a long rant; we just want to inform ya'll that
 this isn't dead and we are trying! We will update you as this saga continues.
 
 Update 1: A member on our Discord, saltsalad, has reported that switching to VisionOS in settings appears 
 to resolve the issue of playback, but not subtitles.
 
-Update 2: Smu1zel has found the issue, YouTube has required a PO-TOKEN on the default implemention. An interim release will make VisionOS the default choice, but do be aware it will cause YouTube Kids content to be unwatchable as it's blocked from it.
+Update 2: Smu1zel has found the issue; YouTube has required a PO-TOKEN on the default implementation. An interim release will make VisionOS the default choice, but do be aware it will cause YouTube Kids content to be unwatchable, as it's blocked from it.
 
-Update 3. The interim release Beta 34.1 source code has been finished (sorry for a direct GitHub edit, erievs has lumbago (lazy), and this was small enough where I erievs didn't feel like setting up git proper). Someone else will have to build it as erievs is having a nightmere of a time trying to build it at the momment, a devkitpro update was needed and it isn't going smoothly for them. 
+Update 3. The interim release Beta 34.1 source code has been finished (sorry for a direct GitHub edit; erievs has lumbago (lazy), and this was small enough that I erievs didn't feel like setting up Git properly). Someone else will have to build it, as erievs is having a nightmare of a time trying to build it at the moment; a devkitpro update was needed, and it isn't going smoothly for them. 
 
 **Please don't make duplicate issues (such as O3DS crashing). This will only make it harder to keep track of bugs.**
 
@@ -37,7 +37,7 @@ Update 3. The interim release Beta 34.1 source code has been finished (sorry for
 
   [Smu1zel](https://github.com/Smu1zel) - Figured out the line of code that needed to be changed and tested the change out, fixing the app after it stopped working in 2024.
 
-  [NCP 3.0](https://github.com/erievs) - Fixing the app after it stopped working in 2024.
+  [NCP 3.0](https://github.com/erievs) - Fixed the app after it stopped working in 2024.
 
   [5GBurrito](https://github.com/5GBurrito) - Minor changes (project manager?).
 
@@ -54,7 +54,7 @@ Update 3. The interim release Beta 34.1 source code has been finished (sorry for
 ## Description
 It utilizes some undocumented YouTube APIs to get the raw video URL and plays the stream using the decoder taken from [Video player for 3DS by Core-2-Extreme](https://github.com/Core-2-Extreme/Video_player_for_3DS).  
 
-It does not run any JavaScript code or render HTML/CSS, so it's significantly faster than YouTube on the browser.  
+It does not run any JavaScript code or render HTML/CSS, so it's significantly faster than YouTube in a browser.  
 
 The name is derived from the fact that it is the fourth YouTube client on 3DS, following the official YouTube app (discontinued), then the New 3DS browser, and ThirdTube.  
 
@@ -82,19 +82,19 @@ You can use the QR code below to download & install the .cia directly from your 
 
 ## Controls
 
- - B button : go back to the previous screen  
- - C-pad up/down : scroll
- - L/R : switch between tabs
- - Select + Start : blackout the bottom screen
+ - B button: go back to the previous screen  
+ - C-pad up/down: scroll
+ - L/R: switch between tabs
+ - Select + Start: blackout the bottom screen
  - In video player
-    - Arrow left/right : 10 s seek
-    - ZL/ZR : 5 s seek
+    - Arrow left/right: 10 s seek
+    - ZL/ZR: 5 s seek
 
 Below are for debug purposes
 
- - Select + X : toggle debug log
- - Select + Y : toggle memory usage monitor
- - Select + R + A : toggle FPS monitor
+ - Select + X: toggle debug log
+ - Select + Y: toggle memory usage monitor
+ - Select + R + A: toggle FPS monitor
 
 
 
@@ -124,26 +124,26 @@ You can use the code under the terms of the GNU General Public License GPL v3 or
 by the FFmpeg developers under GNU Lesser General Public License (LGPL) version 2.1  
 The modified source code can be found at https://github.com/windows-server-2003/FFmpeg/tree/3ds.  
 ### [rapidjson](https://github.com/Tencent/rapidjson)
-by Tencent and Milo Yip under MIT License  
+by Tencent and Milo Yip under the MIT License.
 ### [libctru](https://github.com/devkitPro/libctru)
 by devkitPro under zlib License  
 ### [libcurl](https://curl.se/)
 by Daniel Stenberg and many contributors under the curl License  
 ### [libbrotli](https://github.com/google/brotli)  
-by the Brotli Authors under MIT license
+by the Brotli Authors under the MIT License
 ### [stb](https://github.com/nothings/stb/)
 by Sean Barrett under MIT License and Public Domain  
 
 ## Archived ThirdTube credits
 * Core 2 Extreme  
-  For [Video player for 3DS](https://github.com/Core-2-Extreme/Video_player_for_3DS) which this app is based on.  
-  Needless to say, the video playback functionality is essential for this app, and it would not have been possible to develop this software without him spending his time optimizing the code sometimes even with assembly and looking into HW decoding on the new 3DS.
+  For [Video player for 3DS](https://github.com/Core-2-Extreme/Video_player_for_3DS), which this app is based on.  
+  Needless to say, the video playback functionality is essential for this app, and it would not have been possible to develop this software without him spending his time optimizing the code, sometimes even with assembly and looking into HW decoding on the new 3DS.
 * dixy52-beep  
   For in-app textures
 * [PokéTube](https://github.com/Poketubepoggu)  
   For the icon and the banner
 * The contributors of [youtube-dl](https://github.com/ytdl-org/youtube-dl)  
-  As a reference about YouTube webpage parsing. It was especially helpful for the deobfuscation of ciphered signatures.  
+  As a reference for YouTube webpage parsing. It was especially helpful for the deobfuscation of ciphered signatures.  
 * The contributors of [pytube](https://github.com/pytube/pytube)  
-  As a reference about YouTube webpage parsing. Thanks to its strict dependency-free policy, I was able to port some of the code without difficulty.  
+  As a reference for YouTube webpage parsing. Thanks to its strict dependency-free policy, I was able to port some of the code without difficulty.  
 
